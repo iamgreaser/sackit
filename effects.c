@@ -167,17 +167,6 @@ void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *
 	
 	uint8_t offs = (uint8_t)pchn->vib_offs;
 	
-	int vshift = 6;
-	int vadd = 32;
-	int vsign = 1;
-	
-	if(sackit->module->header.flags & IT_MOD_OLDFX)
-	{
-		vshift = 6;
-		vadd = 32;
-		vsign = -2;
-	}
-	
 	switch(pchn->vib_type&3)
 	{
 		case 0: // sine
@@ -215,14 +204,13 @@ void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *
 	12375 0
 	*/
 	
-	
-	v = v*pchn->vib_depth*vsign;
-	int negdepth = (v < 0 ? 1 : 0);
+	v = v*pchn->vib_depth;
+	if(sackit->module->header.flags & IT_MOD_OLDFX)
+		v = ~(v<<1);
+	int negdepth = (v < 0);
 	if(negdepth)
 		v = ~v;
-	if(sackit->module->header.flags & IT_MOD_OLDFX)
-		v += (negdepth ? 2 : -2);
-	v = (v+vadd)>>vshift;
+	v = (v+32)>>6;
 	if(negdepth) v = -v;
 	
 	if(sackit->module->header.flags & IT_MOD_LINEAR)
