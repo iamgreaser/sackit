@@ -204,20 +204,20 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	*/
 	
 	v = v*pchn->vib_depth;
-	v += (v < 0 ? -7 : 8);
-	v = (v < 0 ? -((-v)>>4) : v>>4);
+	int negdepth = (v < 0 ? 1 : 0);
+	if(negdepth) v = ~v;
+	v = (v+8)>>4;
+	if(negdepth) v = -v;
 	
 	if(sackit->module->header.flags & IT_MOD_LINEAR)
 	{
 		if(v >= -15 && v <= 15)
 		{
-			//pchn->achn->ofreq = (2*sackit_pitchslide_linear_fine(pchn->achn->ofreq, v)+1)>>1;
 			pchn->achn->ofreq = sackit_pitchslide_linear_fine(pchn->achn->ofreq, v);
 		} else {
-			// TODO: change the / into shift-ese
-			//pchn->achn->ofreq = (2*sackit_pitchslide_linear(pchn->achn->ofreq, v/4)+1)>>1;
+			// compensating that i have no separate slide up/down function
 			pchn->achn->ofreq = sackit_pitchslide_linear(pchn->achn->ofreq
-				,  (v < 0 ? -((-v)>>2) : v>>2));
+				, (negdepth ? -((-v)>>2): v>>2));
 		}
 	} else {
 		pchn->achn->ofreq = sackit_pitchslide_amiga_fine(pchn->achn->ofreq, v);
