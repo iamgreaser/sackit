@@ -337,7 +337,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			pchn->eff_slide_pitch = vfp = slide_table[vol-194];
 		}
 		
-		pchn->slide_porta += efp;
+		pchn->slide_porta += vfp;
 		flag_slide_porta = 1;
 	} else if (vol <= 212) {
 		// Hx
