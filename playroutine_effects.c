@@ -32,6 +32,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	int flag_slide_porta = 0;
 	int flag_retrig = 0;
 	int flag_vibrato = 0;
+	int flag_done_instrument = 0;
 
 	uint32_t new_sample_offset = 0;
 	
@@ -278,7 +279,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			pchn->vib_depth += (efp&15)*(
 				sackit->module->header.flags & IT_MOD_OLDFX
 				? 2 : 1)
-				*(eft == 0x15 ? 4 : 1);
+				*(eft == 0x15 ? 1 : 4);
 			
 			if(!(sackit->module->header.flags & IT_MOD_OLDFX))
 				flag_vibrato = 1;
@@ -345,13 +346,33 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	
 	if(ins != 0)
 	{
-		// TODO: instrument mode
-		pchn->achn->instrument = NULL;
-		pchn->achn->sample = sackit->module->samples[ins-1];
-		if(vol > 64)
-			pchn->achn->vol = pchn->achn->sample->vol;
+		if(sackit->module->header.flags & IT_MOD_INSTR)
+		{
+			uint8_t xnote = (note <= 119 ? note : pchn->note);
+			
+			it_instrument_t *cins = sackit->module->instruments[ins-1];
+			pchn->achn->instrument = cins;
+			
+			// TODO: confirm behaviour
+			if(cins->notesample[xnote][1] != 0)
+				pchn->achn->sample = sackit->module->samples[cins->notesample[xnote][1]-1];
+			
+			if(note <= 119)
+				note = cins->notesample[xnote][0];
+			
+			flag_done_instrument = 1;
+		} else {
+			pchn->achn->instrument = NULL;
+			pchn->achn->sample = sackit->module->samples[ins-1];
+		}
 		
-		pchn->achn->sv = pchn->achn->sample->gvl;
+		if(pchn->achn->sample != NULL)
+		{
+			if(vol > 64)
+				pchn->achn->vol = pchn->achn->sample->vol;
+			
+			pchn->achn->sv = pchn->achn->sample->gvl;
+		}
 		
 		if((/*(!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) ||*/ pchn->lins != ins)
 			&& note == 253
@@ -370,9 +391,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			((uint32_t)(pitch_table[note*2]))
 			| (((uint32_t)(pitch_table[note*2+1]))<<16);
 		
-		nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->achn->sample->c5speed);
-		
 		//printf("N %i %i %i\n", note, ins, nfreq);
+		nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->achn->sample->c5speed);
 		pchn->tfreq = nfreq;
 		pchn->note = note;
 		
@@ -398,9 +418,25 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	
 	if(flag_retrig)
 	{
-		// TODO: instrument mode
-		pchn->achn->instrument = NULL;
-		pchn->achn->sample = sackit->module->samples[pchn->lins-1];
+		if(!flag_done_instrument)
+		{
+			// FIXME: this is messy! it shouldn't be duplicated twice!
+			if(sackit->module->header.flags & IT_MOD_INSTR)
+			{
+				it_instrument_t *cins = sackit->module->instruments[pchn->lins-1];
+				pchn->achn->instrument = cins;
+				
+				// TODO: confirm behaviour
+				if(cins->notesample[pchn->note][1] != 0)
+				{
+					// FIXME: do i need to do something with the note HERE?
+					pchn->achn->sample = sackit->module->samples[cins->notesample[pchn->note][1]-1];
+				}
+			} else {
+				pchn->achn->instrument = NULL;
+				pchn->achn->sample = sackit->module->samples[pchn->lins-1];
+			}
+		}
 		
 		pchn->achn->freq = pchn->nfreq;
 		pchn->achn->offs = new_sample_offset;

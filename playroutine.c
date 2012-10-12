@@ -287,8 +287,6 @@ void sackit_tick(sackit_playback_t *sackit)
 				// CurrentPattern = Order[ProcessOrder]
 				sackit->current_pattern = sackit->module->orders[sackit->process_order];
 				sackit->number_of_rows = sackit->module->patterns[sackit->current_pattern]->rows; 
-				
-				// NOT LISTED ON CHART: Set pattern row
 				sackit->pat_row = -1;
 			}
 			
@@ -314,7 +312,7 @@ void sackit_tick(sackit_playback_t *sackit)
 	
 	// Instrument mode?
 	// TODO!
-	if(0)
+	if(sackit->module->header.flags & IT_MOD_INSTR)
 	{
 		// Yes
 		// Update Envelopes as required

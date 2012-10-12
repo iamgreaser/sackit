@@ -206,7 +206,7 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	v = v*pchn->vib_depth;
 	int negdepth = (v < 0 ? 1 : 0);
 	if(negdepth) v = ~v;
-	v = (v+8)>>4;
+	v = (v+32)>>6;
 	if(negdepth) v = -v;
 	
 	if(sackit->module->header.flags & IT_MOD_LINEAR)
