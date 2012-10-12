@@ -278,8 +278,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			pchn->vib_speed += (efp>>4)*4;
 			pchn->vib_depth += (efp&15)*(eft == 0x15 ? 1 : 4);
 			
-			if(!(sackit->module->header.flags & IT_MOD_OLDFX))
-				flag_vibrato = 1;
+			//if(!(sackit->module->header.flags & IT_MOD_OLDFX))
+			flag_vibrato = 1;
 			break;
 	}
 	
@@ -464,5 +464,10 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	sackit_effect_pitchslide_fine(sackit, pchn, slide_pitch_fine_now);
 	pchn->achn->ofreq = pchn->achn->freq;
 	if(flag_vibrato)
-		sackit_effect_vibrato(sackit, pchn);
+	{
+		if(sackit->module->header.flags & IT_MOD_OLDFX)
+			sackit_effect_vibrato_nooffs(sackit, pchn);
+		else
+			sackit_effect_vibrato(sackit, pchn);
+	}
 }

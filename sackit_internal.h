@@ -16,6 +16,7 @@ void sackit_effect_volslide_gv(sackit_playback_t *sackit, sackit_pchannel_t *pch
 void sackit_effect_pitchslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int16_t amt);
 void sackit_effect_pitchslide_fine(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int16_t amt);
 void sackit_effect_portaslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int16_t amt);
+void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 
 // fixedmath.c

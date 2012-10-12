@@ -154,7 +154,7 @@ void sackit_effect_portaslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn
 	//printf("%i\n", pchn->achn->freq);
 }
 
-void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
+void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 {
 	int32_t v;
 	
@@ -165,19 +165,17 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	if(!(pchn->achn->flags & SACKIT_ACHN_PLAYING))
 		return;
 	
-	// vibrato starts IMMEDIATELY.
-	pchn->vib_offs += pchn->vib_speed;
-	
 	uint8_t offs = (uint8_t)pchn->vib_offs;
 	
 	int vshift = 6;
 	int vadd = 32;
+	int vsign = 1;
 	
 	if(sackit->module->header.flags & IT_MOD_OLDFX)
 	{
 		vshift = 5;
-		vadd = 32;
-		offs = -offs;
+		vadd = 16;
+		vsign = -1;
 	}
 	
 	switch(pchn->vib_type&3)
@@ -218,7 +216,7 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	*/
 	
 	
-	v = v*pchn->vib_depth;
+	v = v*pchn->vib_depth*vsign;
 	int negdepth = (v < 0 ? 1 : 0);
 	if(negdepth) v = ~v;
 	v = (v+vadd)>>vshift;
@@ -239,4 +237,22 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	}
 	
 	//printf("v %i %i\n", pchn->achn->ofreq, v);
+}
+
+void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
+{
+	int32_t v;
+	
+	if(pchn->achn->ofreq == 0 || pchn->vib_speed == 0)
+		return;
+	
+	//if(pchn->achn->vol == 0 || !(pchn->achn->flags & SACKIT_ACHN_PLAYING))
+	if(!(pchn->achn->flags & SACKIT_ACHN_PLAYING))
+		return;
+	
+	// vibrato starts IMMEDIATELY.
+	pchn->vib_offs += pchn->vib_speed;
+	
+	// apply.
+	sackit_effect_vibrato_nooffs(sackit, pchn);
 }
