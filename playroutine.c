@@ -39,6 +39,7 @@ void sackit_update_effects(sackit_playback_t *sackit)
 				pchn->achn->flags &= ~(
 					SACKIT_ACHN_MIXING
 					|SACKIT_ACHN_PLAYING
+					|SACKIT_ACHN_SUSTAIN
 				);
 			}
 		}

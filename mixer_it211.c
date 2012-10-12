@@ -24,11 +24,16 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 	{
 		sackit_achannel_t *achn = &(sackit->achn[i]);
 		
-		if(achn->sample == NULL || achn->sample->data == NULL)
+		if(achn->sample == NULL || achn->sample->data == NULL
+			|| achn->offs >= achn->sample->length
+			|| achn->offs < 0)
+		{
 			achn->flags &= ~(
 				SACKIT_ACHN_RAMP
 				|SACKIT_ACHN_MIXING
-				|SACKIT_ACHN_PLAYING);
+				|SACKIT_ACHN_PLAYING
+				|SACKIT_ACHN_SUSTAIN);
+		}
 		
 		uint32_t rampmul = tfreq;
 		
@@ -50,11 +55,27 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			
 			//printf("freq %i %i %i\n", zfreq, zoffs, zsuboffs);
 			
-			uint32_t zlpend = achn->sample->loop_end;
 			uint32_t zlpbeg = achn->sample->loop_begin;
+			uint32_t zlpend = achn->sample->loop_end;
 			uint32_t zlength = achn->sample->length;
 			uint8_t zflg = achn->sample->flg;
 			int16_t *zdata = achn->sample->data;
+			
+			if((achn->flags & SACKIT_ACHN_SUSTAIN)
+				&& (zflg & IT_SMP_SUSLOOP))
+			{
+				zlpbeg = achn->sample->susloop_begin;
+				zlpend = achn->sample->susloop_end;
+				zflg |= IT_SMP_LOOP;
+				zflg &= ~IT_SMP_LOOPBIDI;
+				if(zflg & IT_SMP_SUSBIDI)
+				{
+					zflg |= IT_SMP_LOOPBIDI;
+				} else {
+					zflg &= ~IT_SMP_LOOPBIDI;
+					achn->flags &= ~SACKIT_ACHN_REVERSE;
+				}
+			}
 			
 			// TODO: sanity check somewhere!
 			if(zflg & IT_SMP_LOOP)
@@ -73,7 +94,11 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			{
 				// get sample value
 				int32_t v0 = zdata[zoffs];
-				int32_t v1 = zdata[(uint32_t)(zoffs+1) == zlpend ? zlpbeg : (uint32_t)(zoffs+1)];
+				int32_t v1 = zdata[(uint32_t)(zoffs+1) == zlength
+					? (zflg & IT_SMP_LOOP
+						? zlpbeg
+						: 0)
+					: (uint32_t)(zoffs+1)];
 				int32_t v  = ((v0*((65535-zsuboffs)))>>16)
 					+ ((v1*(zsuboffs))>>16);
 				//int32_t v = v0 + (((v1-v0)*(zsuboffs>>1))>>15);
@@ -122,7 +147,8 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 					} else {
 						achn->flags &= ~(
 							 SACKIT_ACHN_MIXING
-							|SACKIT_ACHN_PLAYING);
+							|SACKIT_ACHN_PLAYING
+							|SACKIT_ACHN_SUSTAIN);
 						break;
 					}
 				}

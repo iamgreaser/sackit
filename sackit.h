@@ -125,6 +125,7 @@ typedef struct it_module
 #define SACKIT_ACHN_MIXING   0x02
 #define SACKIT_ACHN_RAMP     0x04
 #define SACKIT_ACHN_REVERSE  0x08
+#define SACKIT_ACHN_SUSTAIN  0x10
 
 typedef struct sackit_achannel
 {

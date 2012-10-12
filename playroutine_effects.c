@@ -389,9 +389,10 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		// note cut
 		pchn->achn->flags &= ~(
 			SACKIT_ACHN_MIXING
-			|SACKIT_ACHN_PLAYING);
+			|SACKIT_ACHN_PLAYING
+			|SACKIT_ACHN_SUSTAIN);
 	} else if(note != 253) {
-		// note fade
+		pchn->achn->flags &= ~SACKIT_ACHN_SUSTAIN;
 	}
 	
 	if(flag_retrig)
@@ -408,7 +409,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		pchn->achn->flags |= (
 			SACKIT_ACHN_MIXING
 			|SACKIT_ACHN_PLAYING
-			|SACKIT_ACHN_RAMP);
+			|SACKIT_ACHN_RAMP
+			|SACKIT_ACHN_SUSTAIN);
 		
 		pchn->achn->flags &= ~(
 			SACKIT_ACHN_REVERSE);
