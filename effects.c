@@ -39,7 +39,11 @@ uint32_t sackit_pitchslide_linear_fine(uint32_t freq, int16_t amt)
 		slidemul += (uint32_t)fine_linear_slide_up_table[amt*2];
 	}
 	
-	return sackit_mul_fixed_16_int_32(slidemul, freq);
+	uint32_t r = sackit_mul_fixed_16_int_32(slidemul, freq);
+	
+	//printf("slFde %i\n", r);
+	
+	return r;
 }
 
 uint32_t sackit_pitchslide_amiga_fine(uint32_t freq, int16_t amt)
@@ -166,8 +170,15 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	
 	uint8_t offs = (uint8_t)pchn->vib_offs;
 	
+	int vshift = 6;
+	int vadd = 32;
+	
 	if(sackit->module->header.flags & IT_MOD_OLDFX)
-		offs = ~offs;
+	{
+		vshift = 5;
+		vadd = 32;
+		offs = -offs;
+	}
 	
 	switch(pchn->vib_type&3)
 	{
@@ -206,10 +217,11 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	12375 0
 	*/
 	
+	
 	v = v*pchn->vib_depth;
 	int negdepth = (v < 0 ? 1 : 0);
 	if(negdepth) v = ~v;
-	v = (v+32)>>6;
+	v = (v+vadd)>>vshift;
 	if(negdepth) v = -v;
 	
 	if(sackit->module->header.flags & IT_MOD_LINEAR)

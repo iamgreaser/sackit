@@ -276,10 +276,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			pchn->eff_vibrato = efp;
 			
 			pchn->vib_speed += (efp>>4)*4;
-			pchn->vib_depth += (efp&15)*(
-				sackit->module->header.flags & IT_MOD_OLDFX
-				? 2 : 1)
-				*(eft == 0x15 ? 1 : 4);
+			pchn->vib_depth += (efp&15)*(eft == 0x15 ? 1 : 4);
 			
 			if(!(sackit->module->header.flags & IT_MOD_OLDFX))
 				flag_vibrato = 1;
