@@ -1,4 +1,5 @@
-#define AMICLK (916315123)
+#define AMICLK (938308796416LL)
+#define AMIMUL (65536LL)
 
 // note, these aren't the IT limits (smps is 99 afaik)
 // but they should be fine for now --GM
@@ -164,7 +165,7 @@ typedef struct sackit_pchannel
 	uint16_t note_delay_ins;
 	uint16_t note_delay_vol;
 	uint16_t vib_speed;
-	uint16_t vib_depth;
+	int16_t vib_depth;
 	uint16_t vib_offs;
 	uint16_t vib_type;
 	uint16_t vib_lins;

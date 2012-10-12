@@ -47,7 +47,7 @@ uint32_t sackit_pitchslide_amiga_fine(uint32_t freq, int16_t amt)
 	if(amt == 0)
 		return freq;
 	
-	uint32_t r = AMICLK/(AMICLK/((int32_t)freq) - ((int32_t)amt)*64);
+	uint32_t r = AMICLK/(AMICLK/((int64_t)freq) - ((int64_t)amt)*AMIMUL);
 	
 	//printf("ami %i\n", r);
 	
@@ -165,6 +165,9 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	pchn->vib_offs += pchn->vib_speed;
 	
 	uint8_t offs = (uint8_t)pchn->vib_offs;
+	
+	if(sackit->module->header.flags & IT_MOD_OLDFX)
+		offs = ~offs;
 	
 	switch(pchn->vib_type&3)
 	{
