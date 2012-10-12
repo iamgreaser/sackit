@@ -12,7 +12,8 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 	
 	// just a guess :)
 	//uint32_t rampspd = (65536*488)/44100;
-	uint32_t rampspd = 488;
+	int32_t rampspd = tfreq/500+1;
+	int32_t rampinc = 65536/rampspd-11; // TODO: make this more correct!
 	
 	int32_t gvol = sackit->gv; // 7
 	int32_t mvol = sackit->mv; // 7
@@ -35,14 +36,16 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 				|SACKIT_ACHN_SUSTAIN);
 		}
 		
-		uint32_t rampmul = tfreq;
+		int32_t rampmul = 0;
+		int32_t ramprem = 0;
 		
 		if(achn->flags & SACKIT_ACHN_RAMP)
 		{
 			achn->flags &= ~SACKIT_ACHN_RAMP;
-			rampmul = 0;
+			ramprem = rampspd;
 			
 			//printf("ramp %i %i %i\n", i, rampspd, (32768+rampspd-1)/rampspd);
+			printf("ramp %i %i %i\n", i, rampinc, ramprem);
 		}
 		
 		if(achn->flags & SACKIT_ACHN_MIXING)
@@ -95,26 +98,28 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			{
 				// get sample value
 				int32_t v0 = zdata[zoffs];
-				int32_t v1 = zdata[(zoffs+1) == zlength
+				int32_t v1 = ((zoffs+1) == zlength
 					? (zflg & IT_SMP_LOOP
-						? zlpbeg
+						? zdata[zlpbeg]
 						: 0)
-					: (zoffs+1)];
+					: zdata[(zoffs+1)]);
 				int32_t v  = ((v0*((65535-zsuboffs)))>>16)
 					+ ((v1*(zsuboffs))>>16);
 				//int32_t v = v0 + (((v1-v0)*(zsuboffs>>1))>>15);
 				
-				if(rampmul < tfreq)
-				{
-					int32_t rampvol = (rampmul<<16)/tfreq;
-					v = (v*rampvol)>>16;
-					rampmul += rampspd;
-				}
-				
 				v = ((v*vol)>>16);
 				
+				if(ramprem > 0)
+				{
+					//int32_t rampvol = ((rampmul<<16) + (tfreq<<1))/tfreq;
+					v = (v*rampmul)>>16;
+					rampmul += rampinc;
+					ramprem--;
+					//printf("r %i %i %i\n", rampmul, rampinc, ramprem);
+				}
+				
 				// mix
-				mixbuf[j] -= v;
+				mixbuf[j] += v;
 				
 				// update
 				zsuboffs += zfreq;
@@ -167,7 +172,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 	// stick into the buffer
 	for(j = 0; j < len; j++)
 	{
-		int32_t bv = mixbuf[j];
+		int32_t bv = -mixbuf[j];
 		bv = (bv*mvol)>>7;
 		if(bv < -32768) bv = -32768;
 		else if(bv > 32767) bv = 32767;
