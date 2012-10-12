@@ -385,6 +385,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		
 	} else if(note == 255) {
 		// note off
+		pchn->achn->flags &= ~SACKIT_ACHN_SUSTAIN;
 	} else if(note == 254) {
 		// note cut
 		pchn->achn->flags &= ~(
@@ -392,7 +393,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			|SACKIT_ACHN_PLAYING
 			|SACKIT_ACHN_SUSTAIN);
 	} else if(note != 253) {
-		pchn->achn->flags &= ~SACKIT_ACHN_SUSTAIN;
+		// note fade
 	}
 	
 	if(flag_retrig)
