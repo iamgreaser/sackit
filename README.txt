@@ -38,3 +38,9 @@ If you'd like to test this,
 If your test uses IT214-compressed samples,
 - open it up in IT >=2.14 (it214v5.zip should be fine)
 - resave it as "IT2xx" (as opposed to "IT214")
+
+AUTHORS:
+  2012- Ben "GreaseMonkey" Russell.
+
+LICENCE:
+  Public domain. I'm sick of people using libmikmod/libmodplug. THEY BOTH SUCK.
