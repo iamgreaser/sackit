@@ -1,0 +1,8 @@
+# object files
+*.o
+sackit_*
+libsackit.so
+
+# backups
+*~
+

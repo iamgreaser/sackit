@@ -1,0 +1,40 @@
+sackit is an .it format player that strives for sample accuracy.
+Currently it's not quite there for any tests,
+  but does come pretty close ignoring volume ramping.
+
+It currently targets IT v2.11 for a few reasons:
+- It's the first version with a .wav writer.
+- It hasn't really changed since the first .raw writer in IT206.
+- IT v2.12 introduces anticlick into the .wav writer, which adds complexity.
+- IT v2.13 uses logarithmic vol ramping and quadratic interp.
+- IT v2.14 COMPLETELY SCREWS EVERYTHING OVER,
+    as it switches to a cubic-spline *FLOATING-POINT* mixer.
+- IT v2.14 patch 3 does LOTS OF THINGS:
+  - Hey guys, I'm a resonant filter!
+    - Not much of an issue as I've seen the actual ASM source code Jeff released,
+      although it's for the A,B,C coefficient stuff, not the actual mixing.
+  - "Time accuracy improved"...
+    - I think this means I can't just do (int)((mixfreq*4)/(tempo*10)).
+- IT v2.14 patch 4 introduces a 4 band EQ.
+  - This means more bloody reverse engineering.
+  - Yes, patch 4 actually existed. I don't have it though, but p5 should be the same.
+
+So, the status of things:
+- Tiny bit of +/- 1 per channel noise.
+- Volume ramping isn't quite right.
+- Haven't quite got the right Amiga base clock, so slides tend to be off slightly.
+- Vibrato works perfectly where it doesn't retrigger, at least wrt linear slides.
+- IT214 decompression is not implemented yet. (I've done it before, don't worry!)
+- Sanity checks are lacking - it's pretty easy to crash it.
+- Not many effects are implemented.
+- INSTRUMENTS ARE NOT SUPPORTED YET.
+
+If you'd like to test this,
+- see if you can get ImpulseTracker 2.11 from somewhere (it211.zip)
+- open DOSBox, core dynamic, cycles max, it /s20 /m44100
+- open the IT module and play it with that wavewriter
+- compare the module and the wav file with ./sackit_compare
+
+If your test uses IT214-compressed samples,
+- open it up in IT >=2.14 (it214v5.zip should be fine)
+- resave it as "IT2xx" (as opposed to "IT214")
