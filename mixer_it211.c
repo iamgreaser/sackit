@@ -45,7 +45,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			ramprem = rampspd;
 			
 			//printf("ramp %i %i %i\n", i, rampspd, (32768+rampspd-1)/rampspd);
-			printf("ramp %i %i %i\n", i, rampinc, ramprem);
+			//printf("ramp %i %i %i\n", i, rampinc, ramprem);
 		}
 		
 		if(achn->flags & SACKIT_ACHN_MIXING)
