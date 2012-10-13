@@ -11,9 +11,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 	int32_t *mixbuf = (int32_t *)&(sackit->mixbuf[offs]);
 	
 	// just a guess :)
-	//uint32_t rampspd = (65536*488)/44100;
-	int32_t rampspd = tfreq/500+1;
-	int32_t rampinc = 65536/rampspd-11; // TODO: make this more correct!
+	int32_t ramplen = tfreq/500+1;
 	
 	int32_t gvol = sackit->gv; // 7
 	int32_t mvol = sackit->mv; // 7
@@ -35,9 +33,6 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 				|SACKIT_ACHN_PLAYING
 				|SACKIT_ACHN_SUSTAIN);
 		}
-		
-		int32_t rampmul = 0;
-		int32_t ramprem = rampspd;
 		
 		if(achn->flags & SACKIT_ACHN_RAMP)
 		{
@@ -93,12 +88,19 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			vol = ((int32_t)achn->vol) // 6
 				*((int32_t)achn->sv) // 6
 				*((int32_t)achn->cv) // 6
-				*gvol; // 7
+				*gvol // 7
+			;
 			//vol += (1<<9);
 			vol >>= 10;
+			vol = (vol*mvol)>>7; // 7
 			
 			achn->lramp = vol;
 			
+			int32_t rampmul = zlramp;
+			int32_t ramprem = ramplen;
+			int32_t rampspd = (vol-zlramp)/(ramplen+1);
+			
+			//printf("%i\n", rampspd);
 			for(j = 0; j < len; j++)
 			{
 				// get sample value
@@ -114,13 +116,9 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 				
 				if(ramprem > 0)
 				{
-					int32_t rampvol = vol-zlramp;
-					rampvol = zlramp + ((rampvol*rampmul)>>16);
-					
-					v = (v*rampvol+0x8000)>>16;
-					rampmul += rampinc;
+					v = (v*rampmul+0x8000)>>16;
+					rampmul += rampspd;
 					ramprem--;
-					//printf("r %i %i %i\n", rampmul, rampinc, ramprem);
 				} else {
 					v = ((v*vol+0x8000)>>16);
 				}
@@ -180,7 +178,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 	for(j = 0; j < len; j++)
 	{
 		int32_t bv = -mixbuf[j];
-		bv = (bv*mvol+64)>>7;
+		//bv = (bv*mvol+64)>>7;
 		if(bv < -32768) bv = -32768;
 		else if(bv > 32767) bv = 32767;
 		
