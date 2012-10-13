@@ -37,12 +37,13 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 		}
 		
 		int32_t rampmul = 0;
-		int32_t ramprem = 0;
+		int32_t ramprem = rampspd;
 		
 		if(achn->flags & SACKIT_ACHN_RAMP)
 		{
 			achn->flags &= ~SACKIT_ACHN_RAMP;
-			ramprem = rampspd;
+			//ramprem = rampspd;
+			achn->lramp = 0;
 			
 			//printf("ramp %i %i %i\n", i, rampspd, (32768+rampspd-1)/rampspd);
 			//printf("ramp %i %i %i\n", i, rampinc, ramprem);
@@ -53,6 +54,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			int32_t zoffs = achn->offs;
 			int32_t zsuboffs = achn->suboffs;
 			int32_t zfreq = achn->ofreq;
+			int32_t zlramp = achn->lramp;
 			
 			zfreq = sackit_div_int_32_32_to_fixed_16(zfreq,tfreq);
 			
@@ -94,6 +96,8 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 				*gvol; // 7
 			vol >>= 10;
 			
+			achn->lramp = vol;
+			
 			for(j = 0; j < len; j++)
 			{
 				// get sample value
@@ -107,15 +111,17 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 					+ ((v1*(zsuboffs))>>16);
 				//int32_t v = v0 + (((v1-v0)*(zsuboffs>>1))>>15);
 				
-				v = ((v*vol)>>16);
-				
 				if(ramprem > 0)
 				{
-					//int32_t rampvol = ((rampmul<<16) + (tfreq<<1))/tfreq;
-					v = (v*rampmul)>>16;
+					int32_t rampvol = vol-zlramp;
+					rampvol = zlramp + ((rampvol*rampmul)>>16);
+					
+					v = (v*rampvol)>>16;
 					rampmul += rampinc;
 					ramprem--;
 					//printf("r %i %i %i\n", rampmul, rampinc, ramprem);
+				} else {
+					v = ((v*vol)>>16);
 				}
 				
 				// mix

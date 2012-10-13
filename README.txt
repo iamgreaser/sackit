@@ -23,6 +23,7 @@ So, the status of things:
 - Tiny bit of +/- 1 per channel noise.
 - Volume ramping isn't quite right.
 - Haven't quite got the right Amiga base clock, so slides tend to be off slightly.
+  - This has been improved, but still gets it wrong every now and then.
 - Vibrato works perfectly where it doesn't retrigger, at least wrt linear slides.
 - IT214 decompression is not implemented yet. (I've done it before, don't worry!)
 - Sanity checks are lacking - it's pretty easy to crash it.

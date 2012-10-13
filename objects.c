@@ -182,6 +182,8 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->vol = 0;
 	achn->fv = 0;
 	achn->cv = 0;
+	
+	achn->lramp = 0;
 }
 
 void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)

@@ -137,6 +137,7 @@ typedef struct sackit_achannel
 	uint16_t flags;
 	uint8_t vol,sv,cv; // TODO: more stuff
 	uint8_t fv;
+	int32_t lramp;
 	it_instrument_t *instrument;
 	it_sample_t *sample;
 } sackit_achannel_t;
