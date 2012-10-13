@@ -94,6 +94,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 				*((int32_t)achn->sv) // 6
 				*((int32_t)achn->cv) // 6
 				*gvol; // 7
+			//vol += (1<<9);
 			vol >>= 10;
 			
 			achn->lramp = vol;
@@ -116,12 +117,12 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 					int32_t rampvol = vol-zlramp;
 					rampvol = zlramp + ((rampvol*rampmul)>>16);
 					
-					v = (v*rampvol)>>16;
+					v = (v*rampvol+0x8000)>>16;
 					rampmul += rampinc;
 					ramprem--;
 					//printf("r %i %i %i\n", rampmul, rampinc, ramprem);
 				} else {
-					v = ((v*vol)>>16);
+					v = ((v*vol+0x8000)>>16);
 				}
 				
 				// mix
@@ -179,7 +180,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 	for(j = 0; j < len; j++)
 	{
 		int32_t bv = -mixbuf[j];
-		bv = (bv*mvol)>>7;
+		bv = (bv*mvol+64)>>7;
 		if(bv < -32768) bv = -32768;
 		else if(bv > 32767) bv = 32767;
 		
