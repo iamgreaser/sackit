@@ -147,8 +147,12 @@ typedef struct sackit_envelope
 #define SACKIT_ACHN_REVERSE  0x08
 #define SACKIT_ACHN_SUSTAIN  0x10
 #define SACKIT_ACHN_FADEOUT  0x20
+#define SACKIT_ACHN_BACKGND  0x40
 
-typedef struct sackit_achannel
+typedef struct sackit_achannel sackit_achannel_t;
+typedef struct sackit_pchannel sackit_pchannel_t;
+
+struct sackit_achannel
 {
 	int32_t ofreq;
 	int32_t freq;
@@ -160,21 +164,26 @@ typedef struct sackit_achannel
 	int32_t lramp;
 	int16_t fadeout;
 	
+	sackit_achannel_t *prev,*next;
+	sackit_pchannel_t *parent;
+	
 	it_instrument_t *instrument;
 	it_sample_t *sample;
 	sackit_envelope_t evol,epan,epitch;
-} sackit_achannel_t;
+};
 
 // pattern channel
-typedef struct sackit_pchannel
+struct sackit_pchannel
 {
 	sackit_achannel_t *achn;
 	
 	uint32_t tfreq;
 	uint32_t nfreq;
+	int32_t freq;
 	uint8_t note;
 	uint8_t lins;
 	uint8_t cv;
+	uint8_t vol;
 	
 	int16_t slide_vol;
 	int16_t slide_pan;
@@ -206,8 +215,11 @@ typedef struct sackit_pchannel
 	uint8_t eff_tempo;
 	uint8_t eff_slide_vol_veff;
 	
+	it_instrument_t *instrument;
+	it_sample_t *sample;
+	
 	uint8_t lmask,ldata[5];
-} sackit_pchannel_t;
+};
 
 typedef struct sackit_playback
 {

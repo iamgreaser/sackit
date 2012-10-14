@@ -196,6 +196,9 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	
 	achn->fadeout = 1024;
 	
+	achn->next = achn->prev = NULL;
+	achn->parent = NULL;
+	
 	sackit_playback_reset_env(&(achn->evol), 64);
 	sackit_playback_reset_env(&(achn->epan), 0);
 	sackit_playback_reset_env(&(achn->epitch), 0);
@@ -206,10 +209,12 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->achn = NULL;
 	pchn->tfreq = 0;
 	pchn->nfreq = 0;
+	pchn->freq = 0;
 	pchn->note = 253;
 	pchn->lins = 0;
 	
 	pchn->cv = 64;
+	pchn->vol = 0;
 	
 	pchn->slide_vol = 0;
 	pchn->slide_vol_cv = 0;
@@ -237,6 +242,9 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->eff_vibrato = 0;
 	pchn->eff_tempo = 0;
 	pchn->eff_slide_vol_veff = 0;
+	
+	pchn->instrument = NULL;
+	pchn->sample = NULL;
 }
 
 void sackit_playback_reset(sackit_playback_t *sackit)
@@ -274,8 +282,10 @@ void sackit_playback_reset(sackit_playback_t *sackit)
 	for(i = 0; i < 64; i++)
 	{
 		sackit_playback_reset_pchn(&(sackit->pchn[i]));
-		// FIXME: allocate dynamically once we have instruments working
-		sackit->pchn[i].achn = &(sackit->achn[i]);
+		
+		/*sackit->pchn[i].achn = &(sackit->achn[i]);
+		sackit->pchn[i].achn->parent = &(sackit->pchn[i]);*/
+		
 		sackit->pchn[i].cv = sackit->module->header.chnl_vol[i];
 	}
 }

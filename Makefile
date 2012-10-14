@@ -9,7 +9,7 @@ LDFLAGS_COMPARE = -g -lm `sdl-config --libs`
 INCLUDES = sackit_internal.h sackit.h
 
 OBJS_MIXER = mixer_it211.o
-OBJS = effects.o fixedmath.o $(OBJS_MIXER) objects.o playroutine.o playroutine_effects.o tables.o
+OBJS = effects.o fixedmath.o $(OBJS_MIXER) objects.o playroutine.o playroutine_effects.o playroutine_nna.o tables.o
 
 LIBSACKIT_SO = libsackit.so
 SACKIT_COMPARE = sackit_compare

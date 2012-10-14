@@ -62,14 +62,17 @@ void sackit_effect_volslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn, 
 {
 	if(amt < 0)
 	{
-		pchn->achn->vol = (pchn->achn->vol < -amt
+		pchn->vol = (pchn->vol < -amt
 			? 0
-			: pchn->achn->vol+amt);
+			: pchn->vol+amt);
 	} else if(amt > 0) {
-		pchn->achn->vol = (pchn->achn->vol+amt > 64
+		pchn->vol = (pchn->vol+amt > 64
 			? 64
-			: pchn->achn->vol+amt);
+			: pchn->vol+amt);
 	}
+	
+	if(pchn->achn != NULL)
+		pchn->achn->vol = pchn->vol;
 }
 
 void sackit_effect_volslide_cv(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int8_t amt)
@@ -84,7 +87,9 @@ void sackit_effect_volslide_cv(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			? 64
 			: pchn->cv+amt);
 	}
-	pchn->achn->cv = pchn->cv;
+	
+	if(pchn->achn != NULL)
+		pchn->achn->cv = pchn->cv;
 }
 
 void sackit_effect_volslide_gv(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int8_t amt)
@@ -103,39 +108,45 @@ void sackit_effect_volslide_gv(sackit_playback_t *sackit, sackit_pchannel_t *pch
 
 void sackit_effect_pitchslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int16_t amt)
 {
-	if(amt == 0 || pchn->achn->freq == 0)
+	if(amt == 0 || pchn->freq == 0)
 		return;
 	
 	// TODO confirm this behaviour
 	
 	if(sackit->module->header.flags & IT_MOD_LINEAR)
 	{
-		pchn->achn->freq = sackit_pitchslide_linear(pchn->achn->freq, amt);
+		pchn->freq = sackit_pitchslide_linear(pchn->freq, amt);
 	} else {
-		pchn->achn->freq = sackit_pitchslide_amiga_fine(pchn->achn->freq, amt*4);
+		pchn->freq = sackit_pitchslide_amiga_fine(pchn->freq, amt*4);
 	}
+	
+	if(pchn->achn != NULL)
+		pchn->achn->freq = pchn->freq;
 	
 	//printf("%i %i\n", pchn->achn->freq, pchn->achn->flags);
 }
 
 void sackit_effect_pitchslide_fine(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int16_t amt)
 {
-	if(amt == 0 || pchn->achn->freq == 0)
+	if(amt == 0 || pchn->freq == 0)
 		return;
 	
 	// TODO confirm this behaviour
 	
 	if(sackit->module->header.flags & IT_MOD_LINEAR)
 	{
-		pchn->achn->freq = sackit_pitchslide_linear_fine(pchn->achn->freq, amt);
+		pchn->freq = sackit_pitchslide_linear_fine(pchn->freq, amt);
 	} else {
-		pchn->achn->freq = sackit_pitchslide_amiga_fine(pchn->achn->freq, amt);
+		pchn->freq = sackit_pitchslide_amiga_fine(pchn->freq, amt);
 	}
+	
+	if(pchn->achn != NULL)
+		pchn->achn->freq = pchn->freq;
 }
 
 void sackit_effect_portaslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int16_t amt)
 {
-	if(amt == 0 || (uint32_t)pchn->achn->freq == pchn->tfreq || pchn->achn->freq == 0)
+	if(amt == 0 || (uint32_t)pchn->freq == pchn->tfreq || pchn->freq == 0)
 		return;
 	
 	if((uint32_t)pchn->achn->freq < pchn->tfreq)
@@ -143,13 +154,16 @@ void sackit_effect_portaslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn
 		sackit_effect_pitchslide(sackit, pchn, amt);
 		// TODO: confirm if > or >=
 		if((uint32_t)pchn->achn->freq >= pchn->tfreq)
-			pchn->nfreq = pchn->achn->freq = pchn->tfreq;
+			pchn->nfreq = pchn->freq = pchn->tfreq;
 	} else {
 		sackit_effect_pitchslide(sackit, pchn, -amt);
 		// TODO: confirm if < or <=
 		if((uint32_t)pchn->achn->freq <= pchn->tfreq)
-			pchn->nfreq = pchn->achn->freq = pchn->tfreq;
+			pchn->nfreq = pchn->freq = pchn->tfreq;
 	}
+	
+	if(pchn->achn != NULL)
+		pchn->achn->freq = pchn->freq;
 	
 	//printf("%i\n", pchn->achn->freq);
 }
@@ -158,7 +172,7 @@ void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *
 {
 	int32_t v;
 	
-	if(pchn->achn->ofreq == 0 || pchn->vib_speed == 0)
+	if(pchn->achn == NULL || pchn->achn->ofreq == 0 || pchn->vib_speed == 0)
 		return;
 	
 	//if(pchn->achn->vol == 0 || !(pchn->achn->flags & SACKIT_ACHN_PLAYING))
@@ -234,7 +248,7 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 {
 	int32_t v;
 	
-	if(pchn->achn->ofreq == 0 || pchn->vib_speed == 0)
+	if(pchn->achn == NULL || pchn->achn->ofreq == 0 || pchn->vib_speed == 0)
 		return;
 	
 	//if(pchn->achn->vol == 0 || !(pchn->achn->flags & SACKIT_ACHN_PLAYING))

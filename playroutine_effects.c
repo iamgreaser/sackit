@@ -122,7 +122,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			if(efp <= 64)
 			{
 				pchn->cv = efp;
-				pchn->achn->cv = efp;
+				if(pchn->achn != NULL)
+					pchn->achn->cv = efp;
 			}
 			break;
 		
@@ -288,7 +289,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		// volume
 		// (OPTIONAL: Feel free to emulate pre-voleffects stuff.
 		//  (Turn the limit up to <= 127.))
-		pchn->achn->vol = vol;
+		pchn->vol = vol;
+		if(pchn->achn != NULL)
+			pchn->achn->vol = pchn->vol;
 	} else if (vol <= 74) {
 		// Ax
 		if(vol == 65)
@@ -377,9 +380,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			
 			it_instrument_t *cins = sackit->module->instruments[ins-1];
 			if(cins == NULL)
-				cins = pchn->achn->instrument;
+				cins = pchn->instrument;
 			else
-				pchn->achn->instrument = cins;
+				pchn->instrument = cins;
 			
 			
 			// TODO: confirm behaviour
@@ -387,7 +390,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			{
 				it_sample_t *csmp = sackit->module->samples[cins->notesample[xnote][1]-1];
 				if(csmp != NULL)
-					pchn->achn->sample = csmp;
+					pchn->sample = csmp;
 			}
 			
 			if(note <= 119)
@@ -395,21 +398,21 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			
 			flag_done_instrument = 1;
 			
-			if(cins != NULL)
-				pchn->achn->iv = pchn->achn->instrument->gbv;
 		} else {
-			pchn->achn->instrument = NULL;
+			pchn->instrument = NULL;
 			it_sample_t *csmp = sackit->module->samples[ins-1];
 			if(csmp != NULL)
-				pchn->achn->sample = csmp;
+				pchn->sample = csmp;
 		}
 		
-		if(pchn->achn->sample != NULL)
+		if(pchn->sample != NULL)
 		{
 			if(vol > 64)
-				pchn->achn->vol = pchn->achn->sample->vol;
-			
-			pchn->achn->sv = pchn->achn->sample->gvl;
+			{
+				pchn->vol = pchn->sample->vol;
+				if(pchn->achn != NULL)
+					pchn->achn->vol = pchn->vol;
+			}
 		}
 		
 		if((/*(!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) ||*/ pchn->lins != ins)
@@ -430,57 +433,44 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			| (((uint32_t)(pitch_table[note*2+1]))<<16);
 		
 		//printf("N %i %i %i\n", note, ins, nfreq);
-		if(pchn->achn->sample != NULL)
+		if(pchn->sample != NULL)
 		{
-			nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->achn->sample->c5speed);
+			nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->sample->c5speed);
 			pchn->tfreq = nfreq;
 			pchn->note = note;
 			
 			// TODO: compat Gxx
-			if((!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) || !flag_slide_porta)
+			if(pchn->achn == NULL || (!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) || !flag_slide_porta)
 			{
-				pchn->nfreq = nfreq;
+				pchn->freq = pchn->nfreq = nfreq;
 				flag_retrig = 1;
 			}
 		}
 	} else if(note == 255) {
 		// note off
-		pchn->achn->flags &= ~SACKIT_ACHN_SUSTAIN;
-		
-		if(pchn->achn->instrument != NULL)
-		{
-			it_instrument_t *cins = pchn->achn->instrument;
-			if(cins->evol.flg & IT_ENV_ON)
-			{
-				if(cins->evol.flg & IT_ENV_LOOP)
-					pchn->achn->flags |= SACKIT_ACHN_FADEOUT;
-			} else {
-				pchn->achn->flags |= SACKIT_ACHN_FADEOUT;
-			}
-		}
+		sackit_nna_note_off(sackit, pchn->achn);
 	} else if(note == 254) {
 		// note cut
-		pchn->achn->flags &= ~(
-			SACKIT_ACHN_MIXING
-			|SACKIT_ACHN_PLAYING
-			|SACKIT_ACHN_SUSTAIN);
+		sackit_nna_note_cut(sackit, pchn->achn);
 	} else if(note != 253) {
 		// note fade
-		pchn->achn->flags |= SACKIT_ACHN_FADEOUT;
+		sackit_nna_note_fade(sackit, pchn->achn);
 	}
 	
 	if(flag_retrig)
 	{
 		if(!flag_done_instrument)
 		{
+			sackit_nna_allocate(sackit, pchn);
+			
 			// FIXME: this is messy! it shouldn't be duplicated twice!
 			if(sackit->module->header.flags & IT_MOD_INSTR)
 			{
 				it_instrument_t *cins = sackit->module->instruments[pchn->lins-1];
 				if(cins == NULL)
-					cins = pchn->achn->instrument;
+					cins = pchn->instrument;
 				else
-					pchn->achn->instrument = cins;
+					pchn->instrument = cins;
 				
 				// TODO: confirm behaviour
 				if(cins == NULL)
@@ -490,20 +480,20 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 					// FIXME: do i need to do something with the note HERE?
 					it_sample_t *csmp = sackit->module->samples[cins->notesample[pchn->note][1]-1];
 					if(csmp == NULL)
-						csmp = pchn->achn->sample;
+						csmp = pchn->sample;
 					else
-						pchn->achn->sample = csmp;
+						pchn->sample = csmp;
 					
 					if(csmp == NULL)
 						flag_retrig = 0;
 				}
 			} else {
-				pchn->achn->instrument = NULL;
+				pchn->instrument = NULL;
 				it_sample_t *csmp = sackit->module->samples[pchn->lins-1];
 				if(csmp == NULL)
-					csmp = pchn->achn->sample;
+					csmp = pchn->sample;
 				else
-					pchn->achn->sample = csmp;
+					pchn->sample = csmp;
 				
 				if(csmp == NULL)
 					flag_retrig = 0;
@@ -512,10 +502,18 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		
 		if(flag_retrig)
 		{
-			pchn->achn->freq = pchn->nfreq;
+			sackit_nna_allocate(sackit, pchn);
+			pchn->achn->instrument = pchn->instrument;
+			pchn->achn->sample = pchn->sample;
+			
+			pchn->achn->freq = pchn->freq;
 			pchn->achn->offs = new_sample_offset;
 			pchn->achn->suboffs = 0;
 			pchn->achn->cv = pchn->cv;
+			if(pchn->instrument != NULL)
+				pchn->achn->iv = pchn->instrument->gbv;
+			if(pchn->sample != NULL)
+				pchn->achn->sv = pchn->sample->gvl;
 			
 			pchn->achn->flags |= (
 				SACKIT_ACHN_MIXING
@@ -550,7 +548,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	sackit_effect_volslide(sackit, pchn, slide_vol_now);
 	sackit_effect_pitchslide(sackit, pchn, slide_pitch_now);
 	sackit_effect_pitchslide_fine(sackit, pchn, slide_pitch_fine_now);
-	pchn->achn->ofreq = pchn->achn->freq;
+	if(pchn->achn != NULL)
+		pchn->achn->ofreq = pchn->achn->freq;
 	if(flag_vibrato)
 	{
 		if(sackit->module->header.flags & IT_MOD_OLDFX)

@@ -16,7 +16,8 @@ void sackit_update_effects(sackit_playback_t *sackit)
 		sackit_effect_pitchslide(sackit, pchn, pchn->slide_pitch);
 		sackit_effect_portaslide(sackit, pchn, pchn->slide_porta);
 		
-		pchn->achn->ofreq = pchn->achn->freq;
+		if(pchn->achn != NULL)
+			pchn->achn->ofreq = pchn->achn->freq;
 		
 		sackit_effect_vibrato(sackit, pchn);
 		
@@ -194,6 +195,8 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 			if(aenv->def == 64 && !(ienv->flg & (IT_ENV_LOOP|IT_ENV_SUSLOOP)))
 			{
 				aenv->flags |= SACKIT_ACHN_FADEOUT;
+				if(aenv->y == 0)
+					achn->fadeout = 0;
 			}
 		}
 	}
@@ -401,8 +404,15 @@ void sackit_tick(sackit_playback_t *sackit)
 				if(achn->flags & SACKIT_ACHN_FADEOUT)
 				{
 					achn->fadeout -= achn->instrument->fadeout;
-					if(achn->fadeout < 0)
+					if(achn->fadeout <= 0)
+					{
 						achn->fadeout = 0;
+						achn->flags &= ~(
+							SACKIT_ACHN_PLAYING
+							|SACKIT_ACHN_MIXING
+							|SACKIT_ACHN_SUSTAIN
+							|SACKIT_ACHN_RAMP);
+					}
 				}
 			}
 		}

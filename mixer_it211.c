@@ -94,14 +94,30 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			vol >>= 10;
 			vol = (vol*mvol)>>7; // 7*/
 			// TODO: sort the order / rounding out
-			vol = (vol*((int32_t)achn->vol))>>6;
+			// 4) FV = Vol * SV * IV * CV * GV * VEV * NFC / 2^41
+			/*vol = (vol*((int32_t)achn->vol))>>6;
 			vol = (vol*((int32_t)achn->sv))>>6;
-			vol = (vol*((int32_t)achn->cv))>>6;
-			vol = (vol*((int32_t)achn->evol.y))>>6;
 			vol = (vol*((int32_t)achn->iv))>>7;
-			vol = (vol*((int32_t)achn->fadeout))>>10;
+			vol = (vol*((int32_t)achn->cv))>>6;
 			vol = (vol*gvol)>>7;
-			vol = (vol*mvol)>>7;
+			vol = (vol*((int32_t)achn->evol.y))>>6;
+			vol = (vol*((int32_t)achn->fadeout))>>10;
+			vol = (vol*mvol)>>7;*/
+			{
+				int64_t bvol = 1;
+				bvol *= ((int64_t)achn->vol);
+				bvol *= ((int64_t)achn->sv);
+				bvol *= ((int64_t)achn->iv);
+				bvol *= ((int64_t)achn->cv);
+				bvol *= ((int64_t)gvol);
+				bvol *= ((int64_t)achn->evol.y);
+				bvol *= ((int64_t)achn->fadeout);
+				bvol *= ((int64_t)mvol);
+				bvol >>= 1;
+				bvol += 1;
+				bvol >>= 39;
+				vol = bvol;
+			}
 			//vol += 0x0080;
 			//vol &= 0x7F00;
 			
@@ -133,7 +149,9 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 					, rampdelta
 					, rampdelta_i&0xFFFF
 					, (rampdelta_i+(ramplen+1)*0x10000) % (ramplen+1)
-					, rampspd);*/
+					, rampspd);
+			*/
+			
 			/*
 			Ramp speeds:
 			06BF NOT 16
