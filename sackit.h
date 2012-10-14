@@ -121,6 +121,25 @@ typedef struct it_module
 	it_pattern_t *patterns[MAX_PATTERNS];
 } it_module_t;
 
+#define SACKIT_ENV_PLAYING 0x01
+#define SACKIT_ENV_SUSTAIN 0x02
+typedef struct sackit_envelope
+{
+	int8_t idx;
+	int16_t x;
+	int8_t y;
+	int8_t def; // "default".
+	int8_t lpbeg,lpend;
+	int8_t susbeg,susend;
+	uint8_t flags;
+	
+	// YES, the X is stored for the carry flag stuff!
+	// (this can be noticed with compat Gxx)
+	int16_t carry_x;
+	int8_t carry_idx;
+	uint8_t carry_flags;
+} sackit_envelope_t;
+
 // audio channel
 #define SACKIT_ACHN_PLAYING  0x01
 #define SACKIT_ACHN_MIXING   0x02
@@ -136,10 +155,13 @@ typedef struct sackit_achannel
 	int32_t suboffs;
 	uint16_t flags;
 	uint8_t vol,sv,cv; // TODO: more stuff
-	uint8_t fv;
+	uint16_t fv;
 	int32_t lramp;
+	int16_t fadeout;
+	
 	it_instrument_t *instrument;
 	it_sample_t *sample;
+	sackit_envelope_t evol,epan,epitch;
 } sackit_achannel_t;
 
 // pattern channel

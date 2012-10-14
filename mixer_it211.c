@@ -85,20 +85,68 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 				zfreq = -zfreq;
 			
 			int32_t vol = 0x8000;
-			vol = ((int32_t)achn->vol) // 6
+			/*vol = ((int32_t)achn->vol) // 6
 				*((int32_t)achn->sv) // 6
 				*((int32_t)achn->cv) // 6
 				*gvol // 7
 			;
 			//vol += (1<<9);
 			vol >>= 10;
-			vol = (vol*mvol)>>7; // 7
+			vol = (vol*mvol)>>7; // 7*/
+			vol = (vol*((int32_t)achn->vol))>>6;
+			vol = (vol*((int32_t)achn->sv))>>6;
+			vol = (vol*((int32_t)achn->cv))>>6;
+			vol = (vol*gvol)>>7;
+			vol = (vol*mvol)>>7;
+			//vol += 0x0080;
+			//vol &= 0x7F00;
 			
 			achn->lramp = vol;
 			
 			int32_t rampmul = zlramp;
 			int32_t ramprem = ramplen;
-			int32_t rampspd = (vol-zlramp)/(ramplen+1);
+			int32_t rampdelta = (vol-zlramp);
+			int32_t rampspd = (rampdelta+0x0080)&~0x00FF;
+			int negdepth = (rampspd < 0);
+			if(negdepth)
+				rampspd = ~rampspd;
+			
+			rampspd = rampspd / (ramplen+1);
+			
+			if(negdepth)
+				rampspd = ~rampspd;
+			
+			rampspd >>= 2;
+			rampspd <<= 2;
+			
+			/*
+			printf("%5i %04X / %5i %04X mod90 is %5i => %5i \n", vol, vol
+				, rampdelta
+				, rampdelta&0xFFFF
+				, (rampdelta+(ramplen+1)*0x10000) % (ramplen+1)
+				, rampspd);
+			*/
+			
+			/*
+			Ramp speeds:
+			06BF NOT 16
+			0B40 = 32
+			0CC0 = 36
+			0F00 = 40
+			1200 = 48
+			1800 = 68
+			1E00 = 84
+			1ED8 NOT 84 (it's 88!)
+			27C0 = 112
+			3000 = 136
+			
+			D000 = -136
+			E800 NOT -68
+			EE00 = -48
+			F400 = -32
+			F4C0 (?) -28
+			FA00 (?) -16
+			*/
 			
 			//printf("%i\n", rampspd);
 			for(j = 0; j < len; j++)

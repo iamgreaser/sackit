@@ -166,6 +166,14 @@ void sackit_playback_free(sackit_playback_t *sackit)
 	free(sackit);
 }
 
+void sackit_playback_reset_env(sackit_envelope_t *aenv, int8_t def)
+{
+	aenv->carry_idx = aenv->idx = 0;
+	aenv->carry_x = aenv->x = 0;
+	aenv->y = aenv->def = def;
+	aenv->carry_flags = aenv->flags = 0;
+}
+
 void sackit_playback_reset_achn(sackit_achannel_t *achn)
 {
 	achn->freq = 0;
@@ -184,6 +192,11 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->cv = 0;
 	
 	achn->lramp = 0;
+	
+	achn->fadeout = 0;
+	sackit_playback_reset_env(&(achn->evol), 64);
+	sackit_playback_reset_env(&(achn->epan), 0);
+	sackit_playback_reset_env(&(achn->epitch), 0);
 }
 
 void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)

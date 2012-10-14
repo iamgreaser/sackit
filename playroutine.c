@@ -315,11 +315,18 @@ void sackit_tick(sackit_playback_t *sackit)
 	if(sackit->module->header.flags & IT_MOD_INSTR)
 	{
 		// Yes
-		// Update Envelopes as required
-		// TODO!
-		
-		// Update fadeout as required
-		// TODO!
+		for(i = 0; i < sackit->achn_count; i++)
+		{
+			sackit_achannel_t *achn = &(sackit->achn[i]);
+			if(achn->flags & SACKIT_ACHN_PLAYING)
+			{
+				// Update Envelopes as required
+				// TODO!
+				
+				// Update fadeout as required
+				// TODO!
+			}
+		}
 	}
 	/*
 	from ITTECH.TXT:
