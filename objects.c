@@ -193,7 +193,8 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	
 	achn->lramp = 0;
 	
-	achn->fadeout = 0;
+	achn->fadeout = 1024;
+	
 	sackit_playback_reset_env(&(achn->evol), 64);
 	sackit_playback_reset_env(&(achn->epan), 0);
 	sackit_playback_reset_env(&(achn->epitch), 0);

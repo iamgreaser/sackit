@@ -387,7 +387,12 @@ void sackit_tick(sackit_playback_t *sackit)
 				sackit_env_update(sackit, achn, &(achn->epitch), &(achn->instrument->epitch));
 				
 				// Update fadeout as required
-				// TODO!
+				if(achn->flags & SACKIT_ACHN_FADEOUT)
+				{
+					achn->fadeout -= achn->instrument->fadeout;
+					if(achn->fadeout < 0)
+						achn->fadeout = 0;
+				}
 			}
 		}
 	}

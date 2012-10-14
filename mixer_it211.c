@@ -99,6 +99,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			vol = (vol*((int32_t)achn->cv))>>6;
 			vol = (vol*((int32_t)achn->evol.y))>>6;
 			vol = (vol*((int32_t)achn->iv))>>6;
+			vol = (vol*((int32_t)achn->fadeout))>>10;
 			vol = (vol*gvol)>>7;
 			vol = (vol*mvol)>>7;
 			//vol += 0x0080;

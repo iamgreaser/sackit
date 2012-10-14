@@ -406,6 +406,18 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	} else if(note == 255) {
 		// note off
 		pchn->achn->flags &= ~SACKIT_ACHN_SUSTAIN;
+		
+		if(pchn->achn->instrument != NULL)
+		{
+			it_instrument_t *cins = pchn->achn->instrument;
+			if(cins->evol.flg & IT_ENV_ON)
+			{
+				if(cins->evol.flg & IT_ENV_LOOP)
+					pchn->achn->flags |= SACKIT_ACHN_FADEOUT;
+			} else {
+				pchn->achn->flags |= SACKIT_ACHN_FADEOUT;
+			}
+		}
 	} else if(note == 254) {
 		// note cut
 		pchn->achn->flags &= ~(
@@ -414,6 +426,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			|SACKIT_ACHN_SUSTAIN);
 	} else if(note != 253) {
 		// note fade
+		pchn->achn->flags |= SACKIT_ACHN_FADEOUT;
 	}
 	
 	if(flag_retrig)
@@ -455,6 +468,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		pchn->achn->evol.idx = 0;
 		pchn->achn->epan.idx = 0;
 		pchn->achn->epitch.idx = 0;
+		
+		pchn->achn->fadeout = 1024;
 		
 		pchn->achn->flags &= ~(
 			SACKIT_ACHN_REVERSE
