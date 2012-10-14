@@ -381,10 +381,11 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			else
 				pchn->achn->instrument = cins;
 			
+			
 			// TODO: confirm behaviour
 			if(cins->notesample[xnote][1] != 0)
 			{
-				it_sample_t *csmp = sackit->module->samples[cins->notesample[pchn->note][1]-1];
+				it_sample_t *csmp = sackit->module->samples[cins->notesample[xnote][1]-1];
 				if(csmp != NULL)
 					pchn->achn->sample = csmp;
 			}
@@ -429,17 +430,19 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			| (((uint32_t)(pitch_table[note*2+1]))<<16);
 		
 		//printf("N %i %i %i\n", note, ins, nfreq);
-		nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->achn->sample->c5speed);
-		pchn->tfreq = nfreq;
-		pchn->note = note;
-		
-		// TODO: compat Gxx
-		if((!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) || !flag_slide_porta)
+		if(pchn->achn->sample != NULL)
 		{
-			pchn->nfreq = nfreq;
-			flag_retrig = 1;
+			nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->achn->sample->c5speed);
+			pchn->tfreq = nfreq;
+			pchn->note = note;
+			
+			// TODO: compat Gxx
+			if((!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) || !flag_slide_porta)
+			{
+				pchn->nfreq = nfreq;
+				flag_retrig = 1;
+			}
 		}
-		
 	} else if(note == 255) {
 		// note off
 		pchn->achn->flags &= ~SACKIT_ACHN_SUSTAIN;
@@ -480,44 +483,59 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 					pchn->achn->instrument = cins;
 				
 				// TODO: confirm behaviour
-				if(cins->notesample[pchn->note][1] != 0)
+				if(cins == NULL)
 				{
+					flag_retrig = 0;
+				} else if(cins->notesample[pchn->note][1] != 0) {
 					// FIXME: do i need to do something with the note HERE?
 					it_sample_t *csmp = sackit->module->samples[cins->notesample[pchn->note][1]-1];
-					if(csmp != NULL)
+					if(csmp == NULL)
+						csmp = pchn->achn->sample;
+					else
 						pchn->achn->sample = csmp;
+					
+					if(csmp == NULL)
+						flag_retrig = 0;
 				}
 			} else {
 				pchn->achn->instrument = NULL;
 				it_sample_t *csmp = sackit->module->samples[pchn->lins-1];
-				if(csmp != NULL)
+				if(csmp == NULL)
+					csmp = pchn->achn->sample;
+				else
 					pchn->achn->sample = csmp;
+				
+				if(csmp == NULL)
+					flag_retrig = 0;
 			}
 		}
 		
-		pchn->achn->freq = pchn->nfreq;
-		pchn->achn->offs = new_sample_offset;
-		pchn->achn->suboffs = 0;
-		pchn->achn->cv = pchn->cv;
-		
-		pchn->achn->flags |= (
-			SACKIT_ACHN_MIXING
-			|SACKIT_ACHN_PLAYING
-			|SACKIT_ACHN_RAMP
-			|SACKIT_ACHN_SUSTAIN);
-		
-		pchn->achn->evol.x = 0;
-		pchn->achn->epan.x = 0;
-		pchn->achn->epitch.x = 0;
-		pchn->achn->evol.idx = 0;
-		pchn->achn->epan.idx = 0;
-		pchn->achn->epitch.idx = 0;
-		
-		pchn->achn->fadeout = 1024;
-		
-		pchn->achn->flags &= ~(
-			SACKIT_ACHN_REVERSE
-			|SACKIT_ACHN_FADEOUT);
+		if(flag_retrig)
+		{
+			pchn->achn->freq = pchn->nfreq;
+			pchn->achn->offs = new_sample_offset;
+			pchn->achn->suboffs = 0;
+			pchn->achn->cv = pchn->cv;
+			
+			pchn->achn->flags |= (
+				SACKIT_ACHN_MIXING
+				|SACKIT_ACHN_PLAYING
+				|SACKIT_ACHN_RAMP
+				|SACKIT_ACHN_SUSTAIN);
+			
+			pchn->achn->evol.x = 0;
+			pchn->achn->epan.x = 0;
+			pchn->achn->epitch.x = 0;
+			pchn->achn->evol.idx = 0;
+			pchn->achn->epan.idx = 0;
+			pchn->achn->epitch.idx = 0;
+			
+			pchn->achn->fadeout = 1024;
+			
+			pchn->achn->flags &= ~(
+				SACKIT_ACHN_REVERSE
+				|SACKIT_ACHN_FADEOUT);
+		}
 	}
 	
 	if(flag_vibrato && pchn->vib_lins != pchn->lins)
