@@ -113,20 +113,17 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			
 			rampspd = rampspd / (ramplen+1);
 			
-			if(negdepth)
-				rampspd = ~rampspd;
-			
 			rampspd >>= 2;
 			rampspd <<= 2;
 			
-			/*
-			printf("%5i %04X / %5i %04X mod90 is %5i => %5i \n", vol, vol
+			if(negdepth)
+				rampspd = -rampspd;
+			
+			/*printf("%5i %04X / %5i %04X mod90 is %5i => %5i \n", vol, vol
 				, rampdelta
 				, rampdelta&0xFFFF
 				, (rampdelta+(ramplen+1)*0x10000) % (ramplen+1)
-				, rampspd);
-			*/
-			
+				, rampspd);*/
 			/*
 			Ramp speeds:
 			06BF NOT 16
