@@ -62,7 +62,7 @@ typedef struct it_envelope
 		int8_t y;
 		uint16_t x;
 	} __attribute__((__packed__)) points[25];
-	
+	uint8_t resv1;
 } __attribute__((__packed__)) it_envelope_t;
 
 #define IT_MOD_STEREO  0x01

@@ -153,7 +153,7 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 	
 	int lpbeg, lpend;
 	
-	lpbeg = lpend = ienv->num;
+	lpbeg = lpend = ienv->num-1;
 	
 	if(ienv->flg & IT_ENV_LOOP)
 	{
@@ -191,7 +191,7 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 			aenv->idx = lpbeg;
 			aenv->x = ienv->points[lpbeg].x;
 			
-			if(!(ienv->flg & (IT_ENV_LOOP|IT_ENV_SUSLOOP)))
+			if(aenv->def == 64 && !(ienv->flg & (IT_ENV_LOOP|IT_ENV_SUSLOOP)))
 			{
 				aenv->flags |= SACKIT_ACHN_FADEOUT;
 			}
@@ -386,6 +386,17 @@ void sackit_tick(sackit_playback_t *sackit)
 				sackit_env_update(sackit, achn, &(achn->epan), &(achn->instrument->epan));
 				sackit_env_update(sackit, achn, &(achn->epitch), &(achn->instrument->epitch));
 				
+				if(achn->instrument != NULL)
+				{
+					if(achn->epitch.y != 0 && !(achn->instrument->epitch.flg & IT_ENV_FILTER))
+					{
+						if(sackit->module->header.flags & IT_MOD_LINEAR)
+							achn->ofreq = sackit_pitchslide_linear(achn->ofreq, achn->epitch.y*8);
+						else
+							achn->ofreq = sackit_pitchslide_amiga_fine(achn->ofreq, achn->epitch.y*32);
+					}
+				}
+				
 				// Update fadeout as required
 				if(achn->flags & SACKIT_ACHN_FADEOUT)
 				{
@@ -423,8 +434,10 @@ void sackit_tick(sackit_playback_t *sackit)
 		4) FV = Vol * SV * IV * CV * GV * VEV * NFC / 2^41
 	*/
 	
-	for(i = 0; i < 64; i++)
+	for(i = 0; i < sackit->achn_count; i++)
 	{
+		sackit_achannel_t *achn = &(sackit->achn[i]);
+		
 		// Calculate final volume if required
 		// TODO!
 		
