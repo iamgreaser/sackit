@@ -235,6 +235,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->eff_arpeggio = 0;
 	pchn->eff_vibrato = 0;
 	pchn->eff_tempo = 0;
+	pchn->eff_slide_vol_veff = 0;
 }
 
 void sackit_playback_reset(sackit_playback_t *sackit)

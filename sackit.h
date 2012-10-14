@@ -204,6 +204,7 @@ typedef struct sackit_pchannel
 	uint8_t eff_arpeggio;
 	uint8_t eff_vibrato;
 	uint8_t eff_tempo;
+	uint8_t eff_slide_vol_veff;
 	
 	uint8_t lmask,ldata[5];
 } sackit_pchannel_t;

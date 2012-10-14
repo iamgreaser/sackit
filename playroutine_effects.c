@@ -291,12 +291,40 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		pchn->achn->vol = vol;
 	} else if (vol <= 74) {
 		// Ax
+		if(vol == 65)
+		{
+			vfp = pchn->eff_slide_vol_veff;
+		} else {
+			pchn->eff_slide_vol_veff = vfp = ((int16_t)(vol-65));
+		}
+		slide_vol_now += vfp;
 	} else if (vol <= 84) {
 		// Bx
+		if(vol == 75)
+		{
+			vfp = pchn->eff_slide_vol_veff;
+		} else {
+			pchn->eff_slide_vol_veff = vfp = ((int16_t)(vol-75));
+		}
+		slide_vol_now -= vfp;
 	} else if (vol <= 94) {
 		// Cx
+		if(vol == 85)
+		{
+			vfp = pchn->eff_slide_vol_veff;
+		} else {
+			pchn->eff_slide_vol_veff = vfp = ((int16_t)(vol-85));
+		}
+		pchn->slide_vol += vfp;
 	} else if (vol <= 104) {
 		// Dx
+		if(vol == 95)
+		{
+			vfp = pchn->eff_slide_vol_veff;
+		} else {
+			pchn->eff_slide_vol_veff = vfp = ((int16_t)(vol-95));
+		}
+		pchn->slide_vol -= vfp;
 	} else if (vol <= 114) {
 		// Ex
 		if(vol == 105)
