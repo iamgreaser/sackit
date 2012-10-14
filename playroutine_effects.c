@@ -358,6 +358,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				note = cins->notesample[xnote][0];
 			
 			flag_done_instrument = 1;
+			
+			if(cins != NULL)
+				pchn->achn->iv = pchn->achn->instrument->gbv;
 		} else {
 			pchn->achn->instrument = NULL;
 			pchn->achn->sample = sackit->module->samples[ins-1];
@@ -446,8 +449,16 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			|SACKIT_ACHN_RAMP
 			|SACKIT_ACHN_SUSTAIN);
 		
+		pchn->achn->evol.x = 0;
+		pchn->achn->epan.x = 0;
+		pchn->achn->epitch.x = 0;
+		pchn->achn->evol.idx = 0;
+		pchn->achn->epan.idx = 0;
+		pchn->achn->epitch.idx = 0;
+		
 		pchn->achn->flags &= ~(
-			SACKIT_ACHN_REVERSE);
+			SACKIT_ACHN_REVERSE
+			|SACKIT_ACHN_FADEOUT);
 	}
 	
 	if(flag_vibrato && pchn->vib_lins != pchn->lins)

@@ -61,7 +61,7 @@ typedef struct it_envelope
 	struct {
 		int8_t y;
 		uint16_t x;
-	} __attribute__((__packed__)) points;
+	} __attribute__((__packed__)) points[25];
 	
 } __attribute__((__packed__)) it_envelope_t;
 
@@ -94,9 +94,9 @@ typedef struct it_instrument
 	uint8_t mch,mpr;
 	uint16_t midibnk;
 	uint8_t notesample[120][2];
-	it_envelope_t env_vol;
-	it_envelope_t env_pan;
-	it_envelope_t env_pitch;
+	it_envelope_t evol;
+	it_envelope_t epan;
+	it_envelope_t epitch;
 } __attribute__((__packed__)) it_instrument_t;
 typedef struct it_module_header it_module_header_t;
 typedef struct it_module
@@ -146,6 +146,7 @@ typedef struct sackit_envelope
 #define SACKIT_ACHN_RAMP     0x04
 #define SACKIT_ACHN_REVERSE  0x08
 #define SACKIT_ACHN_SUSTAIN  0x10
+#define SACKIT_ACHN_FADEOUT  0x20
 
 typedef struct sackit_achannel
 {
@@ -154,7 +155,7 @@ typedef struct sackit_achannel
 	int32_t offs;
 	int32_t suboffs;
 	uint16_t flags;
-	uint8_t vol,sv,cv; // TODO: more stuff
+	uint8_t vol,sv,iv,cv; // TODO: more stuff
 	uint16_t fv;
 	int32_t lramp;
 	int16_t fadeout;

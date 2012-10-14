@@ -138,6 +138,67 @@ void sackit_update_pattern(sackit_playback_t *sackit)
 	sackit->pat_ptr = ptr;
 }
 
+void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
+	, sackit_envelope_t *aenv, it_envelope_t *ienv)
+{
+	if(!(ienv->flg & IT_ENV_ON))
+	{
+		aenv->y = aenv->def;
+		return;
+	}
+	
+	// TODO: check the case where points[0].x != 0
+	// TODO: check the case where lpbeg/end are out of range
+	// TODO: clamp x correctly
+	
+	int lpbeg, lpend;
+	
+	lpbeg = lpend = ienv->num;
+	
+	if(ienv->flg & IT_ENV_LOOP)
+	{
+		lpbeg = ienv->lpb;
+		lpend = ienv->lpe;
+	}
+	
+	if((ienv->flg & IT_ENV_SUSLOOP) && (achn->flags & SACKIT_ACHN_SUSTAIN))
+	{
+		lpbeg = ienv->slb;
+		lpend = ienv->sle;
+	}
+	
+	int iy0 = ienv->points[aenv->idx].y;
+	int iy1 = ienv->points[aenv->idx+1].y;
+	int ix0 = ienv->points[aenv->idx].x;
+	int ix1 = ienv->points[aenv->idx+1].x;
+	if(aenv->x == ix0)
+	{
+		aenv->y = iy0;
+	} else if(aenv->x == ix1) {
+		aenv->y = iy1;
+	} else {
+		// TODO: get correct rounding
+		aenv->y = iy0 + ((iy1-iy0)*(aenv->x-ix0))/(ix1-ix0);
+	}
+	
+	aenv->x++;
+	if(aenv->x > ix1 || aenv->idx == lpend)
+	{
+		aenv->idx++;
+		
+		if(aenv->idx >= lpend)
+		{
+			aenv->idx = lpbeg;
+			aenv->x = ienv->points[lpbeg].x;
+			
+			if(!(ienv->flg & (IT_ENV_LOOP|IT_ENV_SUSLOOP)))
+			{
+				aenv->flags |= SACKIT_ACHN_FADEOUT;
+			}
+		}
+	}
+}
+
 /*
 
 once again, ITTECH.TXT:
@@ -321,7 +382,9 @@ void sackit_tick(sackit_playback_t *sackit)
 			if(achn->flags & SACKIT_ACHN_PLAYING)
 			{
 				// Update Envelopes as required
-				// TODO!
+				sackit_env_update(sackit, achn, &(achn->evol), &(achn->instrument->evol));
+				sackit_env_update(sackit, achn, &(achn->epan), &(achn->instrument->epan));
+				sackit_env_update(sackit, achn, &(achn->epitch), &(achn->instrument->epitch));
 				
 				// Update fadeout as required
 				// TODO!

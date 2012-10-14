@@ -93,9 +93,12 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			//vol += (1<<9);
 			vol >>= 10;
 			vol = (vol*mvol)>>7; // 7*/
+			// TODO: sort the order / rounding out
 			vol = (vol*((int32_t)achn->vol))>>6;
 			vol = (vol*((int32_t)achn->sv))>>6;
 			vol = (vol*((int32_t)achn->cv))>>6;
+			vol = (vol*((int32_t)achn->evol.y))>>6;
+			vol = (vol*((int32_t)achn->iv))>>6;
 			vol = (vol*gvol)>>7;
 			vol = (vol*mvol)>>7;
 			//vol += 0x0080;
@@ -106,10 +109,11 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			int32_t rampmul = zlramp;
 			int32_t ramprem = ramplen;
 			int32_t rampdelta = (vol-zlramp);
-			int32_t rampspd = (rampdelta+0x0080)&~0x00FF;
-			int negdepth = (rampspd < 0);
+			int negdepth = (rampdelta < 0);
+			int32_t rampdelta_i = rampdelta;
 			if(negdepth)
-				rampspd = ~rampspd;
+				rampdelta = -rampdelta;
+			int32_t rampspd = (rampdelta+0x0080)&~0x00FF;
 			
 			rampspd = rampspd / (ramplen+1);
 			
@@ -117,13 +121,18 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			rampspd <<= 2;
 			
 			if(negdepth)
+			{
 				rampspd = -rampspd;
+				//rampspd -= 4;
+			}
 			
-			/*printf("%5i %04X / %5i %04X mod90 is %5i => %5i \n", vol, vol
-				, rampdelta
-				, rampdelta&0xFFFF
-				, (rampdelta+(ramplen+1)*0x10000) % (ramplen+1)
-				, rampspd);*/
+			/*
+			if(rampdelta != 0)
+				printf("%5i %04X / %5i %04X mod90 is %5i => %5i \n", vol, vol
+					, rampdelta
+					, rampdelta_i&0xFFFF
+					, (rampdelta_i+(ramplen+1)*0x10000) % (ramplen+1)
+					, rampspd);*/
 			/*
 			Ramp speeds:
 			06BF NOT 16
