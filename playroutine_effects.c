@@ -376,11 +376,18 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			uint8_t xnote = (note <= 119 ? note : pchn->note);
 			
 			it_instrument_t *cins = sackit->module->instruments[ins-1];
-			pchn->achn->instrument = cins;
+			if(cins == NULL)
+				cins = pchn->achn->instrument;
+			else
+				pchn->achn->instrument = cins;
 			
 			// TODO: confirm behaviour
 			if(cins->notesample[xnote][1] != 0)
-				pchn->achn->sample = sackit->module->samples[cins->notesample[xnote][1]-1];
+			{
+				it_sample_t *csmp = sackit->module->samples[cins->notesample[pchn->note][1]-1];
+				if(csmp != NULL)
+					pchn->achn->sample = csmp;
+			}
 			
 			if(note <= 119)
 				note = cins->notesample[xnote][0];
@@ -391,7 +398,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				pchn->achn->iv = pchn->achn->instrument->gbv;
 		} else {
 			pchn->achn->instrument = NULL;
-			pchn->achn->sample = sackit->module->samples[ins-1];
+			it_sample_t *csmp = sackit->module->samples[ins-1];
+			if(csmp != NULL)
+				pchn->achn->sample = csmp;
 		}
 		
 		if(pchn->achn->sample != NULL)
@@ -465,17 +474,24 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			if(sackit->module->header.flags & IT_MOD_INSTR)
 			{
 				it_instrument_t *cins = sackit->module->instruments[pchn->lins-1];
-				pchn->achn->instrument = cins;
+				if(cins == NULL)
+					cins = pchn->achn->instrument;
+				else
+					pchn->achn->instrument = cins;
 				
 				// TODO: confirm behaviour
 				if(cins->notesample[pchn->note][1] != 0)
 				{
 					// FIXME: do i need to do something with the note HERE?
-					pchn->achn->sample = sackit->module->samples[cins->notesample[pchn->note][1]-1];
+					it_sample_t *csmp = sackit->module->samples[cins->notesample[pchn->note][1]-1];
+					if(csmp != NULL)
+						pchn->achn->sample = csmp;
 				}
 			} else {
 				pchn->achn->instrument = NULL;
-				pchn->achn->sample = sackit->module->samples[pchn->lins-1];
+				it_sample_t *csmp = sackit->module->samples[pchn->lins-1];
+				if(csmp != NULL)
+					pchn->achn->sample = csmp;
 			}
 		}
 		
