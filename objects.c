@@ -231,6 +231,9 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->vib_type = 0;
 	pchn->vib_lins = 0;
 	
+	pchn->loop_start = 0;
+	pchn->loop_times = 0;
+	
 	pchn->eff_slide_vol = 0;
 	pchn->eff_slide_vol_cv = 0;
 	pchn->eff_slide_vol_gv = 0;

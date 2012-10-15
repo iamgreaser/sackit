@@ -203,6 +203,9 @@ struct sackit_pchannel
 	uint16_t vib_type;
 	uint16_t vib_lins;
 	
+	int16_t loop_start;
+	uint8_t loop_times;
+	
 	uint8_t eff_slide_vol;
 	uint8_t eff_slide_vol_cv;
 	uint8_t eff_slide_vol_gv;

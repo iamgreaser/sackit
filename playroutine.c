@@ -27,7 +27,8 @@ void sackit_update_effects(sackit_playback_t *sackit)
 			uint32_t arpmul = (uint32_t)pitch_table[(arp+60)*2+1];
 			arpmul <<= 16;
 			arpmul += (uint32_t)pitch_table[(arp+60)*2];
-			pchn->achn->ofreq = sackit_mul_fixed_16_int_32(arpmul, pchn->achn->ofreq);
+			if(pchn->achn != NULL)
+				pchn->achn->ofreq = sackit_mul_fixed_16_int_32(arpmul, pchn->achn->ofreq);
 		}
 		
 		pchn->arpeggio = ((pchn->arpeggio<<4)&0xFFF)|((pchn->arpeggio>>8)&15);

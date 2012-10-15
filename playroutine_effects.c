@@ -174,6 +174,30 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			}
 			switch(eh)
 			{
+				case 0xB: // SBx - (loopback)
+					// TRIVIA:
+					// Before 1.04, this used song-global variables (as in S3M)
+					// Before 2.10, this didn't set the loop start after a successful looping.
+					if(el == 0)
+					{
+						// TODO: sort out the nasty SBx/Cxx/Bxx combos
+						// (IIRC there's only one weird one)
+						pchn->loop_start = sackit->current_row-1;
+					} else {
+						if(pchn->loop_times == 0)
+						{
+							pchn->loop_times = el;
+						} else {
+							pchn->loop_times--;
+							if(pchn->loop_times == 0)
+							{
+								pchn->loop_start = sackit->current_row;
+								break;
+							}
+						}
+						sackit->process_row = pchn->loop_start;
+					}
+					break;
 				case 0xC: // SCx - (note cut)
 					pchn->note_cut = (el == 0 ? 1 : el);
 					break;
@@ -415,7 +439,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			}
 		}
 		
-		if((/*(!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) ||*/ pchn->lins != ins)
+		if(((
+			pchn->achn == NULL || (!(pchn->achn->flags & SACKIT_ACHN_PLAYING))
+			)|| pchn->lins != ins)
 			&& note == 253
 			&& pchn->note != 253)
 		{
