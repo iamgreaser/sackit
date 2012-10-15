@@ -294,3 +294,26 @@ void sackit_effect_tremor(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 			pchn->trm_flags |= 2;
 	}
 }
+
+void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int first_note)
+{
+	// TODO: confirm th
+	if(!(pchn->rtg_flags&1))
+		return;
+	printf("%02X %i\n", pchn->rtg_val, pchn->rtg_counter);
+	
+	if(pchn->rtg_counter == 0)
+	{
+		pchn->rtg_counter = pchn->rtg_val&15;
+		if(pchn->rtg_counter == 0)
+			pchn->rtg_counter++;
+		
+		if(!first_note)
+		{
+			sackit_note_retrig(sackit, pchn, 0);
+			// TODO: volslide
+			// TODO: work out rounding from * and / volslides
+		}
+	}
+	pchn->rtg_counter--;
+}

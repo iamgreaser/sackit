@@ -1,5 +1,42 @@
 #include "sackit_internal.h"
 
+void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int offs)
+{
+	sackit_nna_allocate(sackit, pchn);
+	
+	pchn->achn->instrument = pchn->instrument;
+	pchn->achn->sample = pchn->sample;
+	
+	pchn->achn->freq = pchn->freq;
+	pchn->achn->offs = offs;
+	pchn->achn->suboffs = 0;
+	pchn->achn->cv = pchn->cv;
+	if(pchn->instrument != NULL)
+		pchn->achn->iv = pchn->instrument->gbv;
+	if(pchn->sample != NULL)
+		pchn->achn->sv = pchn->sample->gvl;
+	
+	pchn->achn->flags |= (
+		SACKIT_ACHN_MIXING
+		|SACKIT_ACHN_PLAYING
+		|SACKIT_ACHN_RAMP
+		|SACKIT_ACHN_SUSTAIN);
+	
+	pchn->achn->evol.x = 0;
+	pchn->achn->epan.x = 0;
+	pchn->achn->epitch.x = 0;
+	pchn->achn->evol.idx = 0;
+	pchn->achn->epan.idx = 0;
+	pchn->achn->epitch.idx = 0;
+	
+	pchn->achn->fadeout = 1024;
+	
+	pchn->achn->flags &= ~(
+		SACKIT_ACHN_REVERSE
+		|SACKIT_ACHN_FADEOUT
+		|SACKIT_ACHN_BACKGND);
+}
+
 void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pchn,
 	uint8_t note, uint8_t ins, uint8_t vol, uint8_t eft, uint8_t efp)
 {
@@ -16,6 +53,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	pchn->vib_speed = 0;
 	pchn->vib_depth = 0;
 	pchn->trm_flags &= ~1;
+	pchn->rtg_flags &= ~1;
+	pchn->rtg_val = 0;
 	
 	pchn->note_cut = 0;
 	pchn->note_delay = 0;
@@ -34,7 +73,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	int flag_retrig = 0;
 	int flag_vibrato = 0;
 	int flag_done_instrument = 0;
-
+	
 	uint32_t new_sample_offset = 0;
 	
 	uint8_t el = efp&15;
@@ -174,7 +213,21 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				pchn->eff_sample_offs = efp;
 			}
 			
+			// TODO: SAx
 			new_sample_offset = efp<<8;
+			
+			break;
+		
+		case 0x11: // Qxx - (retrigger)
+			if(efp == 0)
+			{
+				efp = pchn->eff_retrig;
+			} else {
+				pchn->eff_retrig = efp;
+			}
+			
+			pchn->rtg_flags |= 1;
+			pchn->rtg_val = efp;
 			
 			break;
 		
@@ -543,39 +596,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		
 		if(flag_retrig)
 		{
-			sackit_nna_allocate(sackit, pchn);
-			
-			pchn->achn->instrument = pchn->instrument;
-			pchn->achn->sample = pchn->sample;
-			
-			pchn->achn->freq = pchn->freq;
-			pchn->achn->offs = new_sample_offset;
-			pchn->achn->suboffs = 0;
-			pchn->achn->cv = pchn->cv;
-			if(pchn->instrument != NULL)
-				pchn->achn->iv = pchn->instrument->gbv;
-			if(pchn->sample != NULL)
-				pchn->achn->sv = pchn->sample->gvl;
-			
-			pchn->achn->flags |= (
-				SACKIT_ACHN_MIXING
-				|SACKIT_ACHN_PLAYING
-				|SACKIT_ACHN_RAMP
-				|SACKIT_ACHN_SUSTAIN);
-			
-			pchn->achn->evol.x = 0;
-			pchn->achn->epan.x = 0;
-			pchn->achn->epitch.x = 0;
-			pchn->achn->evol.idx = 0;
-			pchn->achn->epan.idx = 0;
-			pchn->achn->epitch.idx = 0;
-			
-			pchn->achn->fadeout = 1024;
-			
-			pchn->achn->flags &= ~(
-				SACKIT_ACHN_REVERSE
-				|SACKIT_ACHN_FADEOUT
-				|SACKIT_ACHN_BACKGND);
+			pchn->rtg_counter = 0;
+			sackit_note_retrig(sackit, pchn, new_sample_offset);
 		}
 	}
 	
@@ -589,6 +611,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	sackit_effect_volslide_cv(sackit, pchn, slide_vol_cv_now);
 	sackit_effect_volslide_gv(sackit, pchn, slide_vol_gv_now);
 	sackit_effect_volslide(sackit, pchn, slide_vol_now);
+	sackit_effect_retrig(sackit, pchn, flag_retrig);
 	sackit_effect_pitchslide(sackit, pchn, slide_pitch_now);
 	sackit_effect_pitchslide_fine(sackit, pchn, slide_pitch_fine_now);
 	if(pchn->achn != NULL)

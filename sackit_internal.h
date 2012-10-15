@@ -19,6 +19,7 @@ void sackit_effect_portaslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn
 void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_tremor(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
+void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int first_note);
 
 // fixedmath.c
 uint32_t sackit_mul_fixed_16_int_32(uint32_t a, uint32_t b);
@@ -32,6 +33,7 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn);
 void sackit_playback_reset_pchn(sackit_pchannel_t *pchn);
 
 // playroutine.c
+void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int offs);
 void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pchn,
 	uint8_t note, uint8_t ins, uint8_t vol, uint8_t eft, uint8_t efp);
 void sackit_update_effects(sackit_playback_t *sackit);

@@ -11,6 +11,7 @@ void sackit_update_effects(sackit_playback_t *sackit)
 		sackit_effect_volslide_cv(sackit, pchn, pchn->slide_vol_cv);
 		sackit_effect_volslide_gv(sackit, pchn, pchn->slide_vol_gv);
 		sackit_effect_volslide(sackit, pchn, pchn->slide_vol);
+		sackit_effect_retrig(sackit, pchn, 0);
 		
 		// TODO: confirm order
 		sackit_effect_pitchslide(sackit, pchn, pchn->slide_pitch);

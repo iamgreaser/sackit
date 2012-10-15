@@ -206,6 +206,9 @@ struct sackit_pchannel
 	uint8_t trm_flags;
 	uint8_t trm_cur_on;
 	uint8_t trm_cur_off;
+	uint8_t rtg_val;
+	uint8_t rtg_flags;
+	uint8_t rtg_counter;
 	
 	int16_t loop_start;
 	uint8_t loop_times;
@@ -222,6 +225,7 @@ struct sackit_pchannel
 	uint8_t eff_vibrato;
 	uint8_t eff_tempo;
 	uint8_t eff_tremor;
+	uint8_t eff_retrig;
 	
 	it_instrument_t *instrument;
 	it_sample_t *sample;
