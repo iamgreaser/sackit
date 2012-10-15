@@ -121,9 +121,156 @@ it_module_t *sackit_module_load(char *fname)
 			// check compression flag
 			if(smp->flg & IT_SMP_COMPRESS)
 			{
-				// FIXME: YES WE *WILL* HAVE THIS!
-				fprintf(stderr, "TODO: IT214-compressed samples\n");
-				abort();
+				// worst case scenario
+				static uint8_t buf[65538];
+				
+				// calc some things
+				int blkunlen = (smp->flg & IT_SMP_16BIT
+					? 0x4000
+					: 0x8000);
+				int blkbasewidth = (smp->flg & IT_SMP_16BIT
+					? 17
+					: 9);
+				int blkbaseshift = (smp->flg & IT_SMP_16BIT
+					? 0
+					: 8);
+				int blkbasebits = (smp->flg & IT_SMP_16BIT
+					? 4
+					: 3);
+				
+				int offs;
+				for(offs = 0; offs < (int)smp->length; offs += blkunlen)
+				{
+					// clear block
+					for(j = 0; j < blkunlen && j+offs < (int)smp->length; j++)
+						smp->data[j+offs] = 0;
+					
+					// get length
+					fread(buf, 2, 1, fp);
+					int blklen = buf[0]|(buf[1]<<8);
+					
+					// get block
+					fread(buf, blklen, 1, fp);
+					
+					//printf("block = %i bytes\n", blklen);
+					
+					// decompress
+					int boffs = 0;
+					int dw = blkbasewidth;
+					for(j = 0; j < blkunlen && j+offs < (int)smp->length && boffs < (blklen<<3); j++)
+					{
+						//printf("%08X %i %i\n", offs, j, dw);
+						int bbigoffs, bsuboffs;
+						bbigoffs = (boffs>>3);
+						bsuboffs = (boffs&7);
+						
+						// read value
+						int v = buf[bbigoffs]
+							|(buf[bbigoffs+1]<<8)
+							|(buf[bbigoffs+2]<<16);
+						v >>= bsuboffs;
+						v &= (1<<dw)-1;
+						if((v&(1<<(dw-1))) != 0)
+							v |= ~((1<<dw)-1);
+						
+						//printf("QERR %i %05X\n", v, v&0xFFFFF);
+						// advance
+						boffs += dw;
+						
+						// now, based on dw...
+						if(dw <= 6)
+						{
+							// type A: 1 through 6 bits
+							
+							// is this 100...00?
+							if(v == ~((1<<(dw-1))-1))
+							{
+								// read next 3/4 bits
+								bbigoffs = (boffs>>3);
+								bsuboffs = (boffs&7);
+								v = buf[bbigoffs]
+									|(buf[bbigoffs+1]<<8);
+								v >>= bsuboffs;
+								v &= (1<<blkbasebits)-1;
+								boffs += blkbasebits;
+								
+								// calculate new bit width
+								v++;
+								if(v >= dw)
+									v++;
+								
+								// change bit width
+								dw = v;
+								j--;
+								continue;
+							}
+						} else if(dw == blkbasewidth) {
+							//printf("TYPE C\n");
+							// type C: bps+1 bits
+							// is the top bit set?
+							if(v & (1<<(dw-1)))
+							{
+								// use the bottom 8 bits
+								// TODO: confirm this is what happens
+								dw = v&255;
+								dw++;
+								
+								// is this out of range?
+								if(dw > blkbasewidth || dw == 0)
+								{
+									// bail out
+									fprintf(stderr,
+										"IT214 block error [%i]: invalid width %i\n"
+										, j
+										, dw);
+									break;
+								}
+								
+								j--;
+								continue;
+							}
+						} else {
+							// type B: 7 through bps bits
+							// is this 01...1x000 through 10...0y111?
+							// ( 8bps: x=1, y=0)
+							// (16bps: x=0, y=1)
+							if(v >= (1<<(dw-1))-(1<<(blkbasebits-1))
+								|| v <= ~((1<<(dw-1))-(1<<(blkbasebits-1))))
+							{
+								// steal next 3/4 bits
+								v += (1<<(blkbasebits-1));
+								v &= 15;
+								
+								// calculate new bit width
+								v++;
+								if(v >= dw)
+									v++;
+								
+								// change bit width
+								dw = v;
+								j--;
+								continue;
+							}
+						}
+						
+						// store value
+						//printf("v = %i\n", v);
+						smp->data[j+offs] = v<<blkbaseshift;
+					}
+					//printf("blk size %i end at %i\n", blklen<<3, boffs);
+					
+					// perform delta conversion
+					for(j = 1; j < blkunlen && j+offs < (int)smp->length; j++)
+						smp->data[j+offs] += smp->data[j+offs-1];
+					
+					// convert
+					if(!(smp->cvt & 0x01))
+					{
+						// TODO!
+					}
+					
+					// TODO: other conversion flags
+				}
 			} else {
 				// load
 				if(smp->flg & IT_SMP_16BIT)
