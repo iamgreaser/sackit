@@ -230,6 +230,9 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->vib_offs = 0;
 	pchn->vib_type = 0;
 	pchn->vib_lins = 0;
+	pchn->trm_val = 0;
+	pchn->trm_cur_on = 0;
+	pchn->trm_cur_off = 0;
 	
 	pchn->loop_start = 0;
 	pchn->loop_times = 0;
@@ -237,6 +240,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->eff_slide_vol = 0;
 	pchn->eff_slide_vol_cv = 0;
 	pchn->eff_slide_vol_gv = 0;
+	pchn->eff_slide_vol_veff = 0;
 	pchn->eff_slide_pitch = 0;
 	pchn->eff_slide_porta = 0;
 	pchn->eff_sample_offs = 0;
@@ -244,7 +248,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->eff_arpeggio = 0;
 	pchn->eff_vibrato = 0;
 	pchn->eff_tempo = 0;
-	pchn->eff_slide_vol_veff = 0;
+	pchn->eff_tremor = 0x11;
 	
 	pchn->instrument = NULL;
 	pchn->sample = NULL;

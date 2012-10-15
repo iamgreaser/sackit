@@ -15,6 +15,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	pchn->arpeggio = 0;
 	pchn->vib_speed = 0;
 	pchn->vib_depth = 0;
+	pchn->trm_flags &= ~1;
 	
 	pchn->note_cut = 0;
 	pchn->note_delay = 0;
@@ -105,6 +106,20 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			} else {
 				slide_pitch_now += (eft == 0x05 ? -1 : 1)*(efp&15);
 			}
+			break;
+		
+		case 0x09: // Ixx - (tremor)
+			if(efp == 0)
+			{
+				efp = pchn->eff_slide_pitch;
+			} else {
+				pchn->eff_slide_pitch = efp;
+			}
+			
+			pchn->eff_tremor = efp;
+			pchn->trm_val = efp;
+			pchn->trm_flags |= 1;
+			
 			break;
 		
 		case 0x0A: // Jxx - (arpeggio)
@@ -585,4 +600,5 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		else
 			sackit_effect_vibrato(sackit, pchn);
 	}
+	sackit_effect_tremor(sackit, pchn);
 }

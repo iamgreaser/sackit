@@ -261,3 +261,36 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	// apply.
 	sackit_effect_vibrato_nooffs(sackit, pchn);
 }
+
+void sackit_effect_tremor(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
+{
+	if(!(pchn->trm_flags & 1))
+		return;
+	
+	if(pchn->trm_flags & 2)
+	{
+		if(pchn->trm_cur_off == 0)
+		{
+			pchn->trm_cur_off = pchn->trm_val&15;
+			if(pchn->trm_cur_off == 0 || (sackit->module->header.flags & IT_MOD_OLDFX))
+				pchn->trm_cur_off++;
+		}
+		
+		if(pchn->achn != NULL)
+			pchn->achn->vol = 0;
+		
+		pchn->trm_cur_off--;
+		if(pchn->trm_cur_off == 0)
+			pchn->trm_flags &= ~2;
+	} else {
+		if(pchn->trm_cur_on == 0)
+		{
+			pchn->trm_cur_on = pchn->trm_val>>4;
+			if(pchn->trm_cur_on == 0 || (sackit->module->header.flags & IT_MOD_OLDFX))
+				pchn->trm_cur_on++;
+		}
+		pchn->trm_cur_on--;
+		if(pchn->trm_cur_on == 0)
+			pchn->trm_flags |= 2;
+	}
+}

@@ -33,6 +33,8 @@ void sackit_update_effects(sackit_playback_t *sackit)
 		
 		pchn->arpeggio = ((pchn->arpeggio<<4)&0xFFF)|((pchn->arpeggio>>8)&15);
 		
+		sackit_effect_tremor(sackit, pchn);
+		
 		if(pchn->note_cut != 0)
 		{
 			pchn->note_cut--;
@@ -298,9 +300,12 @@ void sackit_tick(sackit_playback_t *sackit)
 	{
 		sackit_achannel_t *achn = &(sackit->achn[i]);
 		// Set note volume to volume set for each channel
-		// TODO!
+		if(achn->parent != NULL && achn->parent->achn == achn)
+			achn->vol = achn->parent->vol;
 		
 		// Set note frequency to frequency set for each channel
+		if(achn->parent != NULL && achn->parent->achn == achn)
+			achn->freq = achn->parent->freq;
 		achn->ofreq = achn->freq;
 	}
 	

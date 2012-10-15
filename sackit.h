@@ -202,6 +202,10 @@ struct sackit_pchannel
 	uint16_t vib_offs;
 	uint16_t vib_type;
 	uint16_t vib_lins;
+	uint8_t trm_val;
+	uint8_t trm_flags;
+	uint8_t trm_cur_on;
+	uint8_t trm_cur_off;
 	
 	int16_t loop_start;
 	uint8_t loop_times;
@@ -209,6 +213,7 @@ struct sackit_pchannel
 	uint8_t eff_slide_vol;
 	uint8_t eff_slide_vol_cv;
 	uint8_t eff_slide_vol_gv;
+	uint8_t eff_slide_vol_veff;
 	uint8_t eff_slide_pitch;
 	uint8_t eff_slide_porta;
 	uint8_t eff_sample_offs;
@@ -216,7 +221,7 @@ struct sackit_pchannel
 	uint8_t eff_arpeggio;
 	uint8_t eff_vibrato;
 	uint8_t eff_tempo;
-	uint8_t eff_slide_vol_veff;
+	uint8_t eff_tremor;
 	
 	it_instrument_t *instrument;
 	it_sample_t *sample;
