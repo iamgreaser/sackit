@@ -25,7 +25,7 @@ So, the status of things:
 - Haven't quite got the right Amiga base clock, so slides tend to be off slightly.
   - This has been improved, but still gets it wrong every now and then.
 - Vibrato works perfectly where it doesn't retrigger, at least wrt linear slides.
-- IT214 decompression IS NOW IMPLEMENTED, YAY
+- IT214/215 decompression IS NOW IMPLEMENTED, YAY
 - Sanity checks are lacking - it's pretty easy to crash it.
 - Not many effects are implemented.
 - Instruments are finally supported, though envelopes need work wrt sample-accuracy.

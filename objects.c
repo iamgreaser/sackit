@@ -269,6 +269,13 @@ it_module_t *sackit_module_load(char *fname)
 						// TODO!
 					}
 					
+					if(smp->cvt & 0x04)
+					{
+						for(j = 1; j < blkunlen && j+offs < (int)smp->length; j++)
+							smp->data[j+offs] += smp->data[j+offs-1];
+					}
+					
+					// TODO: not repeat ourselves
 					// TODO: other conversion flags
 				}
 			} else {
