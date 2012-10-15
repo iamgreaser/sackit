@@ -10,8 +10,6 @@
 
 #define SACKIT_MAX_ACHANNEL 256
 
-#define SACKIT_TEST_AU_BUFFER 1024
-
 typedef struct it_pattern
 {
 	uint16_t length;
@@ -271,8 +269,8 @@ it_module_t *sackit_module_new(void);
 void sackit_module_free(it_module_t *module);
 it_module_t *sackit_module_load(char *fname);
 void sackit_playback_free(sackit_playback_t *sackit);
-void sackit_playback_reset(sackit_playback_t *sackit);
-sackit_playback_t *sackit_playback_new(it_module_t *module);
+void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count);
+sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count);
 
 // playroutine.c
 void sackit_playback_update(sackit_playback_t *sackit);

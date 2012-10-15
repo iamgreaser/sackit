@@ -413,7 +413,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->sample = NULL;
 }
 
-void sackit_playback_reset(sackit_playback_t *sackit)
+void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count)
 {
 	int i;
 	
@@ -437,8 +437,8 @@ void sackit_playback_reset(sackit_playback_t *sackit)
 	
 	sackit->tempo = sackit->module->header.it;
 	
-	sackit->achn_count = 256; // TODO: set this somewhere else!
-	sackit->buf_len = SACKIT_TEST_AU_BUFFER; // TODO: same deal!
+	sackit->achn_count = achn_count;
+	sackit->buf_len = buf_len;
 	sackit->buf_tick_rem = 0;
 	sackit->buf = malloc(sizeof(int16_t)*2*sackit->buf_len);
 	sackit->mixbuf = malloc(sizeof(int32_t)*2*sackit->buf_len);
@@ -456,12 +456,12 @@ void sackit_playback_reset(sackit_playback_t *sackit)
 	}
 }
 
-sackit_playback_t *sackit_playback_new(it_module_t *module)
+sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count)
 {
 	// allocate
 	sackit_playback_t *sackit = malloc(sizeof(sackit_playback_t));
 	sackit->module = module;
-	sackit_playback_reset(sackit);
+	sackit_playback_reset(sackit, buf_len, achn_count);
 	
 	return sackit;
 }
