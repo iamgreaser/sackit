@@ -36,13 +36,7 @@ void sackit_update_effects(sackit_playback_t *sackit)
 		{
 			pchn->note_cut--;
 			if(pchn->note_cut == 0)
-			{
-				pchn->achn->flags &= ~(
-					SACKIT_ACHN_MIXING
-					|SACKIT_ACHN_PLAYING
-					|SACKIT_ACHN_SUSTAIN
-				);
-			}
+				sackit_nna_note_cut(sackit, pchn->achn);
 		}
 		
 		
@@ -154,18 +148,25 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 	
 	int lpbeg, lpend;
 	
+	int can_fade = 1;
+	int can_bail = 1;
+	
 	lpbeg = lpend = ienv->num-1;
 	
 	if(ienv->flg & IT_ENV_LOOP)
 	{
 		lpbeg = ienv->lpb;
 		lpend = ienv->lpe;
+		can_fade = 0;
+		can_bail = 0;
 	}
 	
 	if((ienv->flg & IT_ENV_SUSLOOP) && (achn->flags & SACKIT_ACHN_SUSTAIN))
 	{
 		lpbeg = ienv->slb;
 		lpend = ienv->sle;
+		can_fade = 0;
+		can_bail = 0;
 	}
 	
 	int iy0 = ienv->points[aenv->idx].y;
@@ -183,6 +184,7 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 	}
 	
 	aenv->x++;
+	//printf("k %i %i\n",lpend,aenv->x);
 	if(aenv->x > ix1 || aenv->idx == lpend)
 	{
 		aenv->idx++;
@@ -191,12 +193,17 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 		{
 			aenv->idx = lpbeg;
 			aenv->x = ienv->points[lpbeg].x;
+			//printf("E %i %i\n",aenv->x,aenv->def);
 			
-			if(aenv->def == 64 && !(ienv->flg & (IT_ENV_LOOP|IT_ENV_SUSLOOP)))
+			if(aenv->def == 64)
 			{
-				aenv->flags |= SACKIT_ACHN_FADEOUT;
-				if(aenv->y == 0)
-					achn->fadeout = 0;
+				if(can_fade)
+					aenv->flags |= SACKIT_ACHN_FADEOUT;
+				if(can_bail && ienv->points[lpend].y == 0)
+				{
+					sackit_nna_note_cut(sackit, achn);
+					//printf("loldie\n");
+				}
 			}
 		}
 	}
@@ -406,12 +413,7 @@ void sackit_tick(sackit_playback_t *sackit)
 					achn->fadeout -= achn->instrument->fadeout;
 					if(achn->fadeout <= 0)
 					{
-						achn->fadeout = 0;
-						achn->flags &= ~(
-							SACKIT_ACHN_PLAYING
-							|SACKIT_ACHN_MIXING
-							|SACKIT_ACHN_SUSTAIN
-							|SACKIT_ACHN_RAMP);
+						sackit_nna_note_cut(sackit, achn);
 					}
 				}
 			}

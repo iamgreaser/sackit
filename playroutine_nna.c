@@ -129,6 +129,7 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 				achn->next->prev = achn->prev;
 			
 			sackit_playback_reset_achn(achn);
+			
 			pchn->achn = achn;
 			achn->parent = pchn;
 			
@@ -137,7 +138,7 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 			if(old_achn != NULL)
 				old_achn->prev = achn;
 			
-			//printf("%i\n", i);
+			printf("%i\n", i);
 			return;
 		}
 	}

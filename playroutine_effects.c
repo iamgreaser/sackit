@@ -503,6 +503,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		if(flag_retrig)
 		{
 			sackit_nna_allocate(sackit, pchn);
+			
 			pchn->achn->instrument = pchn->instrument;
 			pchn->achn->sample = pchn->sample;
 			
@@ -532,7 +533,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			
 			pchn->achn->flags &= ~(
 				SACKIT_ACHN_REVERSE
-				|SACKIT_ACHN_FADEOUT);
+				|SACKIT_ACHN_FADEOUT
+				|SACKIT_ACHN_BACKGND);
 		}
 	}
 	
