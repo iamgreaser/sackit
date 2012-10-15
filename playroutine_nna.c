@@ -13,6 +13,8 @@ void sackit_nna_note_cut(sackit_playback_t *sackit, sackit_achannel_t *achn)
 
 void sackit_nna_note_off(sackit_playback_t *sackit, sackit_achannel_t *achn)
 {
+	//printf("note_off  %016llX\n", achn);
+	
 	if(achn == NULL)
 		return;
 	
@@ -90,6 +92,8 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	int i;
 	
 	sackit_achannel_t *old_achn = NULL;
+	
+	//printf("NNATRIG %016llX %016llX\n", pchn, pchn->achn);
 	// Check if playing
 	if(pchn->achn != NULL)
 	{
@@ -100,8 +104,10 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 			sackit_nna_note_cut(sackit, old_achn);
 			return;
 		}
-		//if(!(old_achn->flags & SACKIT_ACHN_PLAYING))
-		//	return;
+		if(!(old_achn->flags & SACKIT_ACHN_PLAYING))
+			return;
+		
+		//printf("NNA %i %016llX\n", old_achn->instrument->nna, old_achn);
 		
 		if(old_achn->instrument != NULL)
 		{
@@ -121,7 +127,7 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 		sackit_achannel_t *achn = &(sackit->achn[i]);
 		if(!(achn->flags & SACKIT_ACHN_PLAYING))
 		{
-			if(achn->parent != NULL)
+			if(achn->parent != NULL && achn->parent->achn == achn)
 				achn->parent->achn = NULL;
 			if(achn->prev != NULL)
 				achn->prev->next = achn->next;
@@ -138,7 +144,7 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 			if(old_achn != NULL)
 				old_achn->prev = achn;
 			
-			printf("%i\n", i);
+			//printf("%i\n", i);
 			return;
 		}
 	}

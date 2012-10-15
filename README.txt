@@ -28,7 +28,9 @@ So, the status of things:
 - IT214 decompression is not implemented yet. (I've done it before, don't worry!)
 - Sanity checks are lacking - it's pretty easy to crash it.
 - Not many effects are implemented.
-- INSTRUMENTS ARE NOT SUPPORTED YET.
+- Instruments are finally supported, though envelopes need work wrt sample-accuracy.
+  - NNAs are in place. DCAs are not.
+  - Will abort() if you exhaust all 256 virtual channels at the moment.
 
 If you'd like to test this,
 - see if you can get ImpulseTracker 2.11 from somewhere (it211.zip)
