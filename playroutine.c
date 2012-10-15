@@ -49,12 +49,12 @@ void sackit_update_effects(sackit_playback_t *sackit)
 			pchn->note_delay--;
 			if(pchn->note_delay == 0)
 			{
-				pchn->note_delay = sackit->max_tick;
 				sackit_update_effects_chn(sackit, pchn
 					,pchn->note_delay_note
 					,pchn->note_delay_ins
 					,pchn->note_delay_vol
 					,0,0);
+				pchn->note_delay = sackit->max_tick;
 			}
 		}
 	}
@@ -328,7 +328,8 @@ void sackit_tick(sackit_playback_t *sackit)
 		{
 			// Yes
 			// Row counter = 1
-			sackit->row_counter = 1;
+			// NOTE: DONE LATER
+			sackit->row_counter = 0;
 			
 			// Increase ProcessRow
 			sackit->process_row++;
@@ -375,6 +376,11 @@ void sackit_tick(sackit_playback_t *sackit)
 			// the appropriate row if requried and getting 
 			// the NumberOfRows for the pattern)
 			sackit_update_pattern(sackit);
+			
+			// Row counter = 1
+			// (later than noted in ITTECH.TXT)
+			if(sackit->row_counter == 0)
+				sackit->row_counter = 1;
 		} else {
 			// No
 			// Call update-effects for each channel. 

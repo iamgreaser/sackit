@@ -276,7 +276,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 					return; // cut this part!
 					break;
 				case 0xE: // SEx - (pattern delay)
-					if(sackit->row_counter == 1)
+					if(sackit->row_counter == 0)
 					{
 						sackit->row_counter = el+1;
 					}

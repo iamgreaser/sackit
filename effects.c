@@ -300,7 +300,7 @@ void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, in
 	// TODO: confirm th
 	if(!(pchn->rtg_flags&1))
 		return;
-	printf("%02X %i\n", pchn->rtg_val, pchn->rtg_counter);
+	//printf("%02X %i\n", pchn->rtg_val, pchn->rtg_counter);
 	
 	if(pchn->rtg_counter == 0)
 	{
@@ -311,8 +311,64 @@ void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, in
 		if(!first_note)
 		{
 			sackit_note_retrig(sackit, pchn, 0);
-			// TODO: volslide
+			
 			// TODO: work out rounding from * and / volslides
+			switch(pchn->rtg_val>>4)
+			{
+				case 0x1:
+					pchn->vol -= 1;
+					break;
+				case 0x2:
+					pchn->vol -= 2;
+					break;
+				case 0x3:
+					pchn->vol -= 4;
+					break;
+				case 0x4:
+					pchn->vol -= 8;
+					break;
+				case 0x5:
+					pchn->vol -= 16;
+					break;
+				
+				case 0x6:
+					pchn->vol = (pchn->vol*2+1)/3;
+					break;
+				case 0x7:
+					pchn->vol = (pchn->vol+1)/2;
+					break;
+				
+				case 0x9:
+					pchn->vol += 1;
+					break;
+				case 0xA:
+					pchn->vol += 1;
+					break;
+				case 0xB:
+					pchn->vol += 1;
+					break;
+				case 0xC:
+					pchn->vol += 1;
+					break;
+				case 0xD:
+					pchn->vol += 1;
+					break;
+				
+				case 0xE:
+					pchn->vol = (pchn->vol*3+1)/2;
+					break;
+				case 0xF:
+					pchn->vol *= 2;
+					break;
+			}
+			
+			if(((int8_t)pchn->vol) < 0)
+				pchn->vol = 0;
+			if(pchn->vol > 64)
+				pchn->vol = 64;
+			
+			if(pchn->achn != NULL)
+				pchn->achn->vol = pchn->vol;
 		}
 	}
 	pchn->rtg_counter--;
