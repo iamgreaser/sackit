@@ -104,20 +104,18 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			vol = (vol*((int32_t)achn->fadeout))>>10;
 			vol = (vol*mvol)>>7;*/
 			{
-				int64_t bvol = 1;
-				bvol *= ((int64_t)achn->vol);
-				bvol *= ((int64_t)achn->sv);
-				bvol *= ((int64_t)achn->iv);
-				bvol *= ((int64_t)achn->cv);
-				bvol *= ((int64_t)gvol);
-				bvol *= ((int64_t)achn->evol.y);
-				bvol *= ((int64_t)achn->fadeout);
-				bvol *= ((int64_t)mvol);
-				bvol >>= 1;
-				bvol += 1;
-				bvol >>= 39;
-				vol = bvol;
+				int64_t bvol = 0x8000;
+				bvol = (bvol*(int64_t)achn->evol.y)>>14;
+				bvol = (bvol*(int64_t)achn->vol)>>6;
+				bvol = (bvol*(int64_t)achn->sv)>>6;
+				bvol = (bvol*(int64_t)achn->iv)>>6;
+				bvol = (bvol*(int64_t)achn->cv)>>6;
+				bvol = (bvol*(int64_t)gvol)>>7;
+				bvol = (bvol*(int64_t)achn->fadeout)>>10;
+				bvol = (bvol*(int64_t)mvol)>>7;
+				vol = (bvol)>>1;
 			}
+			//printf("%04X\n", vol);
 			//vol += 0x0080;
 			//vol &= 0x7F00;
 			

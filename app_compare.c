@@ -8,6 +8,8 @@
 
 #include "sackit.h"
 
+#define BUFLEN 1024
+
 SDL_Surface *screen = NULL;
 
 uint32_t palette[4] = {
@@ -33,9 +35,9 @@ void test_sdl_callback(void *userdata, Uint8 *stream, int len)
 	
 	while(offs < len)
 	{
-		if(sound_queue_pos < 1024)
+		if(sound_queue_pos < BUFLEN)
 		{
-			int xlen = 1024-sound_queue_pos;
+			int xlen = BUFLEN-sound_queue_pos;
 			if(xlen > len-offs)
 				xlen = len;
 			
@@ -43,7 +45,7 @@ void test_sdl_callback(void *userdata, Uint8 *stream, int len)
 			sound_queue_pos += xlen;
 			offs += xlen;
 		} else {
-			memcpy(sound_queue, nvbuf, 1024*2);
+			memcpy(sound_queue, nvbuf, BUFLEN*2);
 			sound_queue_pos = 0;
 			sound_ready = 1;
 		}
@@ -97,16 +99,16 @@ int main(int argc, char *argv[])
 		fclose(fp);
 	}
 	
-	sackit_playback_t *sackit = sackit_playback_new(module, 1024, 256);
+	sackit_playback_t *sackit = sackit_playback_new(module, BUFLEN, 256);
 	
 	SDL_AudioSpec aspec;
 	aspec.freq = 44100;
 	aspec.format = AUDIO_S16SYS;
 	aspec.channels = 1;
-	aspec.samples = 1024;
+	aspec.samples = BUFLEN;
 	aspec.callback = test_sdl_callback;
-	sound_buf = calloc(1,1024*2);
-	sound_queue = calloc(1,1024*2);
+	sound_buf = calloc(1,BUFLEN*2);
+	sound_queue = calloc(1,BUFLEN*2);
 	SDL_OpenAudio(&aspec, NULL);
 	SDL_PauseAudio(0);
 	
@@ -175,7 +177,7 @@ int main(int argc, char *argv[])
 			SDL_Flip(screen);
 			
 			int16_t *nvbuf = (int16_t *)sound_buf;
-			memcpy(nvbuf, sackit->buf, 1024*2);
+			memcpy(nvbuf, sackit->buf, BUFLEN*2);
 			sound_ready = 0;
 		}
 		

@@ -92,7 +92,7 @@ void sackit_update_pattern(sackit_playback_t *sackit)
 		while(data[ptr] != 0x00)
 		{
 			uint8_t cval = data[ptr++];
-			uint8_t chn = ((cval-1)&0x7F);
+			uint8_t chn = ((cval-1)&0x3F);
 			sackit_pchannel_t *pchn = &(sackit->pchn[chn]);
 			
 			if(cval&0x80)
@@ -142,7 +142,7 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 {
 	if(!(ienv->flg & IT_ENV_ON))
 	{
-		aenv->y = aenv->def;
+		aenv->y = 256*(int32_t)aenv->def;
 		return;
 	}
 	
@@ -177,14 +177,14 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 	int iy1 = ienv->points[aenv->idx+1].y;
 	int ix0 = ienv->points[aenv->idx].x;
 	int ix1 = ienv->points[aenv->idx+1].x;
-	if(aenv->x == ix0)
+	if(aenv->x <= ix0)
 	{
-		aenv->y = iy0;
-	} else if(aenv->x == ix1) {
-		aenv->y = iy1;
+		aenv->y = iy0*256;
+	} else if(aenv->x >= ix1) {
+		aenv->y = iy1*256;
 	} else {
 		// TODO: get correct rounding
-		aenv->y = iy0 + ((iy1-iy0)*(aenv->x-ix0))/(ix1-ix0);
+		aenv->y = iy0*256 + (256*(iy1-iy0)*(aenv->x-ix0))/(ix1-ix0);
 	}
 	
 	aenv->x++;
@@ -413,10 +413,11 @@ void sackit_tick(sackit_playback_t *sackit)
 				{
 					if(achn->epitch.y != 0 && !(achn->instrument->epitch.flg & IT_ENV_FILTER))
 					{
+						// TODO: analyse this more closely
 						if(sackit->module->header.flags & IT_MOD_LINEAR)
-							achn->ofreq = sackit_pitchslide_linear(achn->ofreq, achn->epitch.y*8);
+							achn->ofreq = sackit_pitchslide_linear(achn->ofreq, achn->epitch.y/32);
 						else
-							achn->ofreq = sackit_pitchslide_amiga_fine(achn->ofreq, achn->epitch.y*32);
+							achn->ofreq = sackit_pitchslide_amiga_fine(achn->ofreq, achn->epitch.y/4);
 					}
 				}
 				

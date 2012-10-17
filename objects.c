@@ -324,7 +324,8 @@ void sackit_playback_reset_env(sackit_envelope_t *aenv, int8_t def)
 {
 	aenv->carry_idx = aenv->idx = 0;
 	aenv->carry_x = aenv->x = 0;
-	aenv->y = aenv->def = def;
+	aenv->def = def;
+	aenv->y = def*256;
 	aenv->carry_flags = aenv->flags = 0;
 }
 

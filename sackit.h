@@ -125,7 +125,7 @@ typedef struct sackit_envelope
 {
 	int8_t idx;
 	int16_t x;
-	int8_t y;
+	int32_t y;
 	int8_t def; // "default".
 	int8_t lpbeg,lpend;
 	int8_t susbeg,susend;
