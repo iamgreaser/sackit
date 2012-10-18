@@ -388,6 +388,9 @@ void sackit_effect_samplevibrato(sackit_playback_t *sackit, sackit_achannel_t *a
 	// 5) Mov [SomeVariableNameRelatingToVibrato], AX  ; For the next cycle.
 	if(achn->svib_power < 0xFF00)
 		achn->svib_power += achn->svib_rate;
+	if(achn->svib_power > (achn->svib_depth<<8))
+		achn->svib_power = (achn->svib_depth<<8);
+	
 	achn->svib_offs += achn->svib_speed;
 	
 	// TODO: determine exact slide!
@@ -419,7 +422,8 @@ void sackit_effect_samplevibrato(sackit_playback_t *sackit, sackit_achannel_t *a
 	//v = (v*((achn->svib_depth*achn->svib_power)>>11));
 	
 	// closest:
-	v = (v*((achn->svib_power>>8)*(((achn->svib_depth)>>3))));
+	//v = (v*((achn->svib_power>>8)*(((achn->svib_depth)>>3))));
+	v = (v*(achn->svib_power>>8));
 	v -= 32;
 	
 	// TODO: check if old effects affects sample vibrato
