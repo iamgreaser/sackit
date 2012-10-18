@@ -472,7 +472,7 @@ void sackit_tick(sackit_playback_t *sackit)
 		// TODO!
 		
 		// Process sample vibrato if required
-		// TODO!
+		sackit_effect_samplevibrato(sackit, achn);
 	}
 	
 	// ----------------------------------------------------

@@ -162,6 +162,13 @@ struct sackit_achannel
 	int32_t lramp;
 	int16_t fadeout;
 	
+	int32_t svib_speed;
+	int32_t svib_type;
+	int32_t svib_depth;
+	int32_t svib_rate;
+	int32_t svib_power;
+	int32_t svib_offs;
+	
 	sackit_achannel_t *prev,*next;
 	sackit_pchannel_t *parent;
 	

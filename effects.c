@@ -373,3 +373,70 @@ void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, in
 	}
 	pchn->rtg_counter--;
 }
+
+void sackit_effect_samplevibrato(sackit_playback_t *sackit, sackit_achannel_t *achn)
+{
+	if(achn == NULL || achn->ofreq == 0)
+		return;
+	
+	// from ITTECH.TXT:
+	// Every processing cycle, the following occurs:
+	// 1) Mov AX, [SomeVariableNameRelatingToVibrato]
+	// 2) Add AL, Rate
+	// 3) AdC AH, 0
+	// 4) AH contains the depth of the vibrato as a fine-linear slide.
+	// 5) Mov [SomeVariableNameRelatingToVibrato], AX  ; For the next cycle.
+	if(achn->svib_power < 0xFF00)
+		achn->svib_power += achn->svib_rate;
+	achn->svib_offs += achn->svib_speed;
+	
+	// TODO: determine exact slide!
+	int32_t v;
+	
+	//if(pchn->achn->vol == 0 || !(pchn->achn->flags & SACKIT_ACHN_PLAYING))
+	if(!(achn->flags & SACKIT_ACHN_PLAYING))
+		return;
+	
+	uint8_t offs = (uint8_t)achn->svib_offs;
+	
+	switch(achn->svib_type&3)
+	{
+		case 0: // sine
+			v = fine_sine_data[offs];
+			break;
+		case 1: // ramp down
+			v = fine_ramp_down_data[offs];
+			break;
+		case 2: // square
+			v = fine_square_wave[offs];
+			break;
+		case 3: // random - NOT EASILY TESTABLE
+			// TODO!
+			v = 0;
+			break;
+	}
+	
+	//v = (v*((achn->svib_depth*achn->svib_power)>>11));
+	
+	// closest:
+	v = (v*((achn->svib_power>>8)*(((achn->svib_depth)>>3))));
+	v -= 32;
+	
+	// TODO: check if old effects affects sample vibrato
+	int negdepth = (v < 0);
+	if(negdepth)
+		v = ~v;
+	v = (v+(1<<5))>>6;
+	if(negdepth) v = -v;
+	
+	if(v >= -15 && v <= 15)
+	{
+		achn->ofreq = sackit_pitchslide_linear_fine(achn->ofreq, v);
+	} else {
+		// compensating that i have no separate slide up/down function
+		achn->ofreq = sackit_pitchslide_linear(achn->ofreq
+			, (negdepth ? -((-v)>>2): v>>2));
+	}
+	//if(achn == (sackit->pchn[0].achn))
+	//	printf("%i %04X %i\n",achn->ofreq, achn->svib_power, v);
+}

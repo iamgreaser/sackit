@@ -14,7 +14,19 @@ void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int 
 	if(pchn->instrument != NULL)
 		pchn->achn->iv = pchn->instrument->gbv;
 	if(pchn->sample != NULL)
+	{
 		pchn->achn->sv = pchn->sample->gvl;
+		pchn->achn->svib_speed = pchn->sample->vis;
+		pchn->achn->svib_depth = pchn->sample->vid;
+		pchn->achn->svib_type = pchn->sample->vit;
+		pchn->achn->svib_rate = pchn->sample->vir;
+		
+		// TODO: work out what to do with old effects mode
+		if(pchn->achn->offs >= (int32_t)pchn->sample->length)
+			pchn->achn->offs = 0;
+	}
+	pchn->achn->svib_offs = 0; // TODO: confirm
+	pchn->achn->svib_power = 0;
 	
 	pchn->achn->flags |= (
 		SACKIT_ACHN_MIXING
@@ -28,6 +40,7 @@ void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int 
 	pchn->achn->evol.idx = 0;
 	pchn->achn->epan.idx = 0;
 	pchn->achn->epitch.idx = 0;
+	
 	
 	pchn->achn->fadeout = 1024;
 	

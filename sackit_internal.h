@@ -20,6 +20,7 @@ void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *
 void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_tremor(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int first_note);
+void sackit_effect_samplevibrato(sackit_playback_t *sackit, sackit_achannel_t *achn);
 
 // fixedmath.c
 uint32_t sackit_mul_fixed_16_int_32(uint32_t a, uint32_t b);

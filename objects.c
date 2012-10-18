@@ -347,6 +347,13 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->cv = 0;
 	achn->iv = 128;
 	
+	achn->svib_speed = 0;
+	achn->svib_type = 0;
+	achn->svib_depth = 0;
+	achn->svib_rate = 0;
+	achn->svib_power = 0;
+	achn->svib_offs = 0;
+	
 	achn->lramp = 0;
 	
 	achn->fadeout = 1024;
