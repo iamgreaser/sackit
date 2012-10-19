@@ -41,6 +41,27 @@ void sackit_nna_note_fade(sackit_playback_t *sackit, sackit_achannel_t *achn)
 	achn->flags |= SACKIT_ACHN_FADEOUT;
 }
 
+void sackit_nna_past_note(sackit_playback_t *sackit, sackit_achannel_t *achn, int nna)
+{
+	while(achn != NULL)
+	{
+		sackit_achannel_t *achn_next = achn->next;
+		switch(nna)
+		{
+			case 0:
+				sackit_nna_note_cut(sackit, achn);
+				break;
+			case 2:
+				sackit_nna_note_off(sackit, achn);
+				break;
+			case 3:
+				sackit_nna_note_fade(sackit, achn);
+				break;
+		}
+		achn = achn_next;
+	}
+}
+
 /*
 from ITTECH.TXT:
 
@@ -91,7 +112,59 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 {
 	int i;
 	
+	// TODO: copy NNA info to the achn (or pchn?)
+	
 	sackit_achannel_t *old_achn = NULL;
+	
+	// Do a duplicate check
+	// TODO: analyse this more deeply
+	if(pchn->bg_achn != NULL)
+	{
+		sackit_achannel_t *achn = pchn->bg_achn;
+		while(achn != NULL)
+		{
+			sackit_achannel_t *achn_next = achn->next;
+			
+			int dca_do = 0;
+			
+			if(achn->instrument != NULL)
+			{
+				switch(achn->instrument->dct)
+				{
+					case 0: // Off
+						break;
+					case 1: // Note
+						dca_do = (achn->note == pchn->note);
+						break;
+					case 2: // Instrument
+						dca_do = (achn->instrument == pchn->instrument);
+						break;
+					case 3: // Sample
+						dca_do = (achn->sample == pchn->sample);
+						break;
+				}
+			}
+			
+			if(dca_do)
+			{
+				//printf("DCA!\n");
+				switch(achn->instrument->dca)
+				{
+					case 0:
+						sackit_nna_note_cut(sackit, achn);
+						break;
+					case 1:
+						sackit_nna_note_off(sackit, achn);
+						break;
+					case 2:
+						sackit_nna_note_fade(sackit, achn);
+						break;
+				}
+			}
+			
+			achn = achn_next;
+		}
+	}
 	
 	//printf("NNATRIG %016llX %016llX\n", pchn, pchn->achn);
 	// Check if playing
@@ -99,7 +172,9 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	{
 		old_achn = pchn->achn;
 		
-		if(old_achn->instrument == NULL || old_achn->instrument->nna == 0)
+		//printf("NNA %i %016llX\n", pchn->nna, old_achn);
+		
+		if(pchn->nna == 0)
 		{
 			sackit_nna_note_cut(sackit, old_achn);
 			return;
@@ -107,15 +182,10 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 		if(!(old_achn->flags & SACKIT_ACHN_PLAYING))
 			return;
 		
-		//printf("NNA %i %016llX\n", old_achn->instrument->nna, old_achn);
-		
-		if(old_achn->instrument != NULL)
-		{
-			if(old_achn->instrument->nna == 2)
-				sackit_nna_note_off(sackit, old_achn);
-			if(old_achn->instrument->nna == 3)
-				sackit_nna_note_fade(sackit, old_achn);
-		}
+		if(pchn->nna == 2)
+			sackit_nna_note_off(sackit, old_achn);
+		if(pchn->nna == 3)
+			sackit_nna_note_fade(sackit, old_achn);
 		
 		old_achn->flags |= SACKIT_ACHN_BACKGND;
 		pchn->achn = NULL;
@@ -127,8 +197,14 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 		sackit_achannel_t *achn = &(sackit->achn[i]);
 		if(!(achn->flags & SACKIT_ACHN_PLAYING))
 		{
-			if(achn->parent != NULL && achn->parent->achn == achn)
-				achn->parent->achn = NULL;
+			if(achn->parent != NULL)
+			{
+				if(achn->parent->achn == achn)
+					achn->parent->achn = NULL;
+				if(achn->parent->bg_achn == achn)
+					achn->parent->bg_achn = achn->next;
+			}
+			
 			if(achn->prev != NULL)
 				achn->prev->next = achn->next;
 			if(achn->next != NULL)
@@ -136,6 +212,7 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 			
 			sackit_playback_reset_achn(achn);
 			
+			pchn->bg_achn = old_achn;
 			pchn->achn = achn;
 			achn->parent = pchn;
 			

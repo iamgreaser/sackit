@@ -331,6 +331,8 @@ void sackit_playback_reset_env(sackit_envelope_t *aenv, int8_t def)
 
 void sackit_playback_reset_achn(sackit_achannel_t *achn)
 {
+	achn->note = 253;
+	
 	achn->freq = 0;
 	achn->ofreq = 0;
 	achn->offs = 0;
@@ -369,6 +371,7 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 {
 	pchn->achn = NULL;
+	pchn->bg_achn = NULL;
 	pchn->tfreq = 0;
 	pchn->nfreq = 0;
 	pchn->freq = 0;
@@ -402,6 +405,8 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	
 	pchn->loop_start = 0;
 	pchn->loop_times = 0;
+	
+	pchn->nna = 0;
 	
 	pchn->eff_slide_vol = 0;
 	pchn->eff_slide_vol_cv = 0;

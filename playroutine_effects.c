@@ -7,6 +7,8 @@ void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int 
 	pchn->achn->instrument = pchn->instrument;
 	pchn->achn->sample = pchn->sample;
 	
+	pchn->achn->note = pchn->note;
+	
 	pchn->achn->freq = pchn->freq;
 	pchn->achn->offs = offs;
 	pchn->achn->suboffs = 0;
@@ -41,6 +43,12 @@ void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int 
 	pchn->achn->epan.idx = 0;
 	pchn->achn->epitch.idx = 0;
 	
+	if(pchn->instrument != NULL)
+	{
+		pchn->achn->evol.flags = pchn->instrument->evol.flg;
+		pchn->achn->epan.flags = pchn->instrument->epan.flg;
+		pchn->achn->epitch.flags = pchn->instrument->epitch.flg;
+	}
 	
 	pchn->achn->fadeout = 1024;
 	
@@ -86,6 +94,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	int flag_retrig = 0;
 	int flag_vibrato = 0;
 	int flag_done_instrument = 0;
+	int flag_nna_set = -1;
+	int flag_s7x = -1;
 	
 	uint32_t new_sample_offset = 0;
 	
@@ -255,6 +265,49 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			}
 			switch(eh)
 			{
+				case 0x7: // S7x - (misc ins stuff)
+				switch(el)
+				{
+					case 0x0: // S70 - (past note cut)
+						sackit_nna_past_note(sackit, pchn->achn, 0);
+						break;
+					case 0x1: // S71 - (past note off)
+						sackit_nna_past_note(sackit, pchn->achn, 2);
+						break;
+					case 0x2: // S72 - (past note fade)
+						sackit_nna_past_note(sackit, pchn->achn, 3);
+						break;
+					case 0x3: // S73 - (NNA = cut)
+						flag_nna_set = 0;
+						break;
+					case 0x4: // S74 - (NNA = continue)
+						flag_nna_set = 1;
+						break;
+					case 0x5: // S75 - (NNA = off)
+						flag_nna_set = 2;
+						break;
+					case 0x6: // S76 - (NNA = fade)
+						flag_nna_set = 3;
+						break;
+					case 0x7: // S77 - (vol env off)
+						flag_s7x = 0x7;
+						break;
+					case 0x8: // S78 - (vol env on)
+						flag_s7x = 0x8;
+						break;
+					case 0x9: // S79 - (pan env off)
+						flag_s7x = 0x9;
+						break;
+					case 0xA: // S7A - (pan env on)
+						flag_s7x = 0xA;
+						break;
+					case 0xB: // S7B - (pitch env off)
+						flag_s7x = 0xB;
+						break;
+					case 0xC: // S7C - (pitch env on)
+						flag_s7x = 0xC;
+						break;
+				} break;
 				case 0xB: // SBx - (loopback)
 					// TRIVIA:
 					// Before 1.04, this used song-global variables (as in S3M)
@@ -520,6 +573,11 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			}
 		}
 		
+		if(/*ins != pchn->lins && */pchn->instrument != NULL && flag_nna_set == -1)
+		{
+			flag_nna_set = pchn->instrument->nna;
+		}
+		
 		if(((
 			pchn->achn == NULL || (!(pchn->achn->flags & SACKIT_ACHN_PLAYING))
 			)|| pchn->lins != ins)
@@ -618,6 +676,32 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	{
 		pchn->vib_lins = pchn->lins;
 		pchn->vib_offs = 0;
+	}
+	
+	if(flag_nna_set != -1)
+		pchn->nna = flag_nna_set;
+	
+	if(pchn->achn != NULL)
+	switch(flag_s7x)
+	{
+		case 0x7:
+			pchn->achn->evol.flags &= ~IT_ENV_ON;
+			break;
+		case 0x8:
+			pchn->achn->evol.flags |= IT_ENV_ON;
+			break;
+		case 0x9:
+			pchn->achn->epan.flags &= ~IT_ENV_ON;
+			break;
+		case 0xA:
+			pchn->achn->epan.flags |= IT_ENV_ON;
+			break;
+		case 0xB:
+			pchn->achn->epitch.flags &= ~IT_ENV_ON;
+			break;
+		case 0xC:
+			pchn->achn->epitch.flags |= IT_ENV_ON;
+			break;
 	}
 	
 	// update slides & stuff

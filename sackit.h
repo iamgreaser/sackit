@@ -119,8 +119,8 @@ typedef struct it_module
 	it_pattern_t *patterns[MAX_PATTERNS];
 } it_module_t;
 
-#define SACKIT_ENV_PLAYING 0x01
-#define SACKIT_ENV_SUSTAIN 0x02
+#define SACKIT_ENV_PLAYING 0x100
+#define SACKIT_ENV_SUSTAIN 0x200
 typedef struct sackit_envelope
 {
 	int8_t idx;
@@ -152,6 +152,8 @@ typedef struct sackit_pchannel sackit_pchannel_t;
 
 struct sackit_achannel
 {
+	uint8_t note;
+	
 	int32_t ofreq;
 	int32_t freq;
 	int32_t offs;
@@ -181,6 +183,7 @@ struct sackit_achannel
 struct sackit_pchannel
 {
 	sackit_achannel_t *achn;
+	sackit_achannel_t *bg_achn;
 	
 	uint32_t tfreq;
 	uint32_t nfreq;
@@ -189,6 +192,8 @@ struct sackit_pchannel
 	uint8_t lins;
 	uint8_t cv;
 	uint8_t vol;
+	
+	uint8_t nna;
 	
 	int16_t slide_vol;
 	int16_t slide_pan;

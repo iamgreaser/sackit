@@ -43,6 +43,7 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_nna_note_off(sackit_playback_t *sackit, sackit_achannel_t *achn);
 void sackit_nna_note_cut(sackit_playback_t *sackit, sackit_achannel_t *achn);
 void sackit_nna_note_fade(sackit_playback_t *sackit, sackit_achannel_t *achn);
+void sackit_nna_past_note(sackit_playback_t *sackit, sackit_achannel_t *achn, int nna);
 void sackit_tick(sackit_playback_t *sackit);
 
 // tables.c
