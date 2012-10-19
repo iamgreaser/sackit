@@ -64,6 +64,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	//if(note != 253)
 	//	printf("N %i %i\n", note, ins);
 	
+	uint8_t vnote = note;
+	
 	pchn->slide_vol = 0;
 	pchn->slide_vol_cv = 0;
 	pchn->slide_vol_gv = 0;
@@ -552,7 +554,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			}
 			
 			if(note <= 119)
-				note = cins->notesample[xnote][0];
+				vnote = cins->notesample[xnote][0];
 			
 			flag_done_instrument = 1;
 			
@@ -593,11 +595,30 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	if(note <= 119)
 	{
 		// actual note
-		uint32_t nfreq = 
-			((uint32_t)(pitch_table[note*2]))
-			| (((uint32_t)(pitch_table[note*2+1]))<<16);
+		if(sackit->module->header.flags & IT_MOD_INSTR)
+		{
+			uint8_t xnote = note;
+			
+			it_instrument_t *cins = pchn->instrument;
+			if(cins != NULL)
+			{
+				// TODO: confirm behaviour
+				if(cins->notesample[xnote][1] != 0)
+				{
+					it_sample_t *csmp = sackit->module->samples[cins->notesample[xnote][1]-1];
+					if(csmp != NULL)
+						pchn->sample = csmp;
+				}
+				
+				vnote = cins->notesample[xnote][0];
+			}
+		}
 		
-		//printf("N %i %i %i\n", note, ins, nfreq);
+		uint32_t nfreq = 
+			((uint32_t)(pitch_table[vnote*2]))
+			| (((uint32_t)(pitch_table[vnote*2+1]))<<16);
+		
+		//printf("N %i %i %i %i\n", note, vnote, ins, nfreq);
 		if(pchn->sample != NULL)
 		{
 			nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->sample->c5speed);

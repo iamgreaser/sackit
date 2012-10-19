@@ -127,7 +127,7 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 			
 			int dca_do = 0;
 			
-			if(achn->instrument != NULL)
+			if(achn->instrument != NULL && achn != pchn->achn)
 			{
 				switch(achn->instrument->dct)
 				{
