@@ -546,18 +546,20 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			
 			
 			// TODO: confirm behaviour
-			if(cins->notesample[xnote][1] != 0)
+			if(cins != NULL)
 			{
-				it_sample_t *csmp = sackit->module->samples[cins->notesample[xnote][1]-1];
-				if(csmp != NULL)
-					pchn->sample = csmp;
+				if(cins->notesample[xnote][1] != 0)
+				{
+					it_sample_t *csmp = sackit->module->samples[cins->notesample[xnote][1]-1];
+					if(csmp != NULL)
+						pchn->sample = csmp;
+				}
+				
+				if(note <= 119)
+					vnote = cins->notesample[xnote][0];
+				
+				flag_done_instrument = 1;
 			}
-			
-			if(note <= 119)
-				vnote = cins->notesample[xnote][0];
-			
-			flag_done_instrument = 1;
-			
 		} else {
 			pchn->instrument = NULL;
 			it_sample_t *csmp = sackit->module->samples[ins-1];
@@ -689,6 +691,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		if(flag_retrig)
 		{
 			pchn->rtg_counter = 0;
+			if(flag_vibrato)
+				pchn->vib_offs = 0;
 			sackit_note_retrig(sackit, pchn, new_sample_offset);
 		}
 	}
@@ -737,9 +741,11 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	if(flag_vibrato)
 	{
 		if(sackit->module->header.flags & IT_MOD_OLDFX)
+		{
 			sackit_effect_vibrato_nooffs(sackit, pchn);
-		else
+		} else {
 			sackit_effect_vibrato(sackit, pchn);
+		}
 	}
 	sackit_effect_tremor(sackit, pchn);
 }
