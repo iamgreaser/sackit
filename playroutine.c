@@ -66,7 +66,7 @@ void sackit_update_pattern(sackit_playback_t *sackit)
 	
 	it_pattern_t *pat = sackit->module->patterns[sackit->current_pattern];
 	int ptr = sackit->pat_ptr;
-	uint8_t *data = pat->data;
+	uint8_t *data = (pat == NULL ? NULL : pat->data);
 	
 	if(sackit->pat_row > sackit->process_row)
 	{
@@ -89,7 +89,7 @@ void sackit_update_pattern(sackit_playback_t *sackit)
 	
 	while(sackit->pat_row <= sackit->process_row)
 	{
-		while(data[ptr] != 0x00)
+		while(data != NULL && data[ptr] != 0x00)
 		{
 			uint8_t cval = data[ptr++];
 			uint8_t chn = ((cval-1)&0x3F);
@@ -365,7 +365,9 @@ void sackit_tick(sackit_playback_t *sackit)
 				
 				// CurrentPattern = Order[ProcessOrder]
 				sackit->current_pattern = sackit->module->orders[sackit->process_order];
-				sackit->number_of_rows = sackit->module->patterns[sackit->current_pattern]->rows; 
+				sackit->number_of_rows = (sackit->module->patterns[sackit->current_pattern] == NULL
+					? 64
+					: sackit->module->patterns[sackit->current_pattern]->rows);
 				sackit->pat_row = -1;
 			}
 			
