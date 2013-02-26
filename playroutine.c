@@ -202,7 +202,7 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 			if(aenv->def == 64)
 			{
 				if(can_fade)
-					aenv->flags |= SACKIT_ACHN_FADEOUT;
+					sackit_nna_note_fade(sackit, achn);
 				if(can_bail && ienv->points[lpend].y == 0)
 				{
 					sackit_nna_note_cut(sackit, achn);
