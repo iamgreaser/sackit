@@ -369,6 +369,19 @@ void sackit_tick(sackit_playback_t *sackit)
 					? 64
 					: sackit->module->patterns[sackit->current_pattern]->rows);
 				sackit->pat_row = -1;
+
+				// clear the pattern previous values
+				// atrk-bu spits out broken files D:
+				for(i=0;i<64;i++)
+				{
+					sackit_pchannel_t *pchn = &(sackit->pchn[i]);
+					pchn->lmask = 0;
+					pchn->ldata[0] = 253;
+					pchn->ldata[1] = 0;
+					pchn->ldata[2] = 255;
+					pchn->ldata[3] = 0;
+					pchn->ldata[4] = 0;
+				}
 			}
 			
 			// CurrentRow = ProcessRow
