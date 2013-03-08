@@ -6,6 +6,9 @@ It currently targets IT v2.11 for a few reasons:
 - It's the first version with a .wav writer.
 - It hasn't really changed since the first .raw writer in IT206.
 - IT v2.12 introduces anticlick into the .wav writer, which adds complexity.
+  - As I have found out, it also adjusts the volume ramping timing.
+    For 44kHz, 2.11 uses 89 samples, while 2.12 uses 111 samples.
+    This appears to be 1/500 of a second for 2.11 and 1/400 for 2.12.
 - IT v2.13 uses logarithmic vol ramping and quadratic interp.
 - IT v2.14 COMPLETELY SCREWS EVERYTHING OVER,
     as it switches to a cubic-spline *FLOATING-POINT* mixer.

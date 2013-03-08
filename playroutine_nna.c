@@ -9,6 +9,10 @@ void sackit_nna_note_cut(sackit_playback_t *sackit, sackit_achannel_t *achn)
 		SACKIT_ACHN_MIXING
 		|SACKIT_ACHN_PLAYING
 		|SACKIT_ACHN_SUSTAIN);
+	
+	//printf("c %i\n", achn->anticlick);
+	sackit->anticlick += achn->anticlick;
+	achn->anticlick = 0;
 }
 
 void sackit_nna_note_off(sackit_playback_t *sackit, sackit_achannel_t *achn)

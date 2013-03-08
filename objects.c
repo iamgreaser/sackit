@@ -332,7 +332,7 @@ void sackit_playback_reset_env(sackit_envelope_t *aenv, int8_t def)
 void sackit_playback_reset_achn(sackit_achannel_t *achn)
 {
 	achn->note = 253;
-	
+
 	achn->freq = 0;
 	achn->ofreq = 0;
 	achn->offs = 0;
@@ -348,6 +348,8 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->fv = 0;
 	achn->cv = 0;
 	achn->iv = 128;
+
+	achn->anticlick = 0;
 	
 	achn->svib_speed = 0;
 	achn->svib_type = 0;
@@ -447,6 +449,7 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 	
 	sackit->gv = sackit->module->header.gv;
 	sackit->mv = sackit->module->header.mv;
+	sackit->anticlick = 0;
 	
 	sackit->tempo = sackit->module->header.it;
 	

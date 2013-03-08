@@ -1,5 +1,7 @@
 #include "sackit_internal.h"
 
+void (*fn_itmixer)(sackit_playback_t *sackit, int offs, int len) = sackit_playback_mixstuff_it212;
+
 void sackit_update_effects(sackit_playback_t *sackit)
 {
 	int i;
@@ -504,7 +506,7 @@ void sackit_playback_update(sackit_playback_t *sackit)
 	{
 		if(sackit->buf_tick_rem != 0)
 		{
-			sackit_playback_mixstuff_it211(sackit, offs, sackit->buf_tick_rem);
+			fn_itmixer(sackit, offs, sackit->buf_tick_rem);
 			offs += sackit->buf_tick_rem;
 		}
 		
@@ -515,7 +517,7 @@ void sackit_playback_update(sackit_playback_t *sackit)
 	
 	if(offs != (int)sackit->buf_len)
 	{
-		sackit_playback_mixstuff_it211(sackit, offs, sackit->buf_len-offs);
+		fn_itmixer(sackit, offs, sackit->buf_len-offs);
 		sackit->buf_tick_rem -= sackit->buf_len-offs;
 	}
 	//printf("rem %i row %i\n", sackit->buf_tick_rem, sackit->process_row);

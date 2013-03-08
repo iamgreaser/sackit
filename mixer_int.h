@@ -1,6 +1,4 @@
-#include "sackit_internal.h"
-
-void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len)
+void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 {
 	uint32_t tfreq = 44100; // TODO define this elsewhere
 	
@@ -11,13 +9,51 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 	int32_t *mixbuf = (int32_t *)&(sackit->mixbuf[offs]);
 	
 	// just a guess :)
+#if MIXER_VER <= 211
 	int32_t ramplen = tfreq/500+1;
+#else
+	int32_t ramplen = tfreq/400+1;
+#endif
 	
 	int32_t gvol = sackit->gv; // 7
 	int32_t mvol = sackit->mv; // 7
 	
 	for(j = 0; j < len; j++)
 		mixbuf[j] = 0;
+	
+#ifdef MIXER_ANTICLICK
+	if(sackit->anticlick != 0)
+	{
+		int32_t rampmul = sackit->anticlick;
+		sackit->anticlick = 0;
+		int32_t ramprem = ramplen;
+		int32_t rampdelta = (0-rampmul);
+		int negdepth = (rampdelta < 0);
+		int32_t rampdelta_i = rampdelta;
+		if(negdepth)
+			rampdelta = -rampdelta;
+		int32_t rampspd = (rampdelta+0x0080)&~0x00FF;
+		
+		rampspd = rampspd / (ramplen+1);
+		
+		rampspd &= ~3;
+		
+		if(negdepth)
+		{
+			rampspd = -rampspd;
+			//rampspd -= 4;
+		}
+		
+		for(j = 0; j < ramplen; j++)
+		{
+			mixbuf[j] += rampmul;
+			int32_t nm = rampmul + rampspd;
+			if((nm*rampmul) <= 0)
+				break;
+			rampmul = nm;
+		}
+	}
+#endif
 
 	for(i = 0; i < sackit->achn_count; i++)
 	{
@@ -43,6 +79,10 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			//printf("ramp %i %i %i\n", i, rampspd, (32768+rampspd-1)/rampspd);
 			//printf("ramp %i %i %i\n", i, rampinc, ramprem);
 		}
+
+#ifdef MIXER_ANTICLICK
+		achn->anticlick = 0;
+#endif
 		
 		if(achn->flags & SACKIT_ACHN_MIXING)
 		{
@@ -142,8 +182,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			
 			rampspd = rampspd / (ramplen+1);
 			
-			rampspd >>= 2;
-			rampspd <<= 2;
+			rampspd &= ~3;
 			
 			if(negdepth)
 			{
@@ -182,8 +221,7 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 			*/
 			
 			//printf("%i\n", rampspd);
-			for(j = 0; j < len; j++)
-			{
+			for(j = 0; j < len; j++) {
 				// get sample value
 				int32_t v0 = zdata[zoffs];
 				int32_t v1 = ((zoffs+1) == zlength
@@ -206,6 +244,10 @@ void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len
 				
 				// mix
 				mixbuf[j] += v;
+#ifdef MIXER_ANTICLICK
+				achn->anticlick = v;
+#endif
+
 				
 				// update
 				zsuboffs += zfreq;

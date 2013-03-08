@@ -28,6 +28,7 @@ uint32_t sackit_div_int_32_32_to_fixed_16(uint32_t a, uint32_t b);
 
 // mixer_*.c
 void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it212(sackit_playback_t *sackit, int offs, int len);
 
 // objects.c
 void sackit_playback_reset_achn(sackit_achannel_t *achn);

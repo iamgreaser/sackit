@@ -52,12 +52,20 @@ void test_sdl_callback(void *userdata, Uint8 *stream, int len)
 	}
 }
 
-
 int main(int argc, char *argv[])
 {
 	int x,y,i;
 	
-	it_module_t *module = sackit_module_load(argv[1]);
+	int argoffs = 1;
+	int pausemode = 0;
+
+	if(!strcmp(argv[argoffs], "-p"))
+	{
+		argoffs++;
+		pausemode = 1;
+	}
+
+	it_module_t *module = sackit_module_load(argv[argoffs]);
 	
 	if(module == NULL)
 		return 1;
@@ -74,9 +82,9 @@ int main(int argc, char *argv[])
 		for(x = 0; x < screen->w; x++)
 			pbuf[divpitch*y+x] = 0x00000000;
 	
-	int16_t *refbuf = (argc > 2 ? malloc(44100*60*10*2) : NULL);
+	int16_t *refbuf = (argc > argoffs ? malloc(44100*60*10*2) : NULL);
 	
-	for(i = 2; i < argc; i++)
+	for(i = argoffs; i < argc; i++)
 	{
 		FILE *fp = fopen(argv[i], "rb");
 		if(fgetc(fp) == 'R')
@@ -133,7 +141,8 @@ int main(int argc, char *argv[])
 		
 		if(play_a_sound && sound_ready)
 		{
-			//play_a_sound = 0;
+			if(pausemode)
+				play_a_sound = 0;
 			sackit_playback_update(sackit);
 			
 			// VISUALISE
