@@ -262,6 +262,66 @@ void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	sackit_effect_vibrato_nooffs(sackit, pchn);
 }
 
+void sackit_effect_tremolo_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
+{
+	int32_t v;
+	
+	if(pchn->achn == NULL || pchn->achn->ofreq == 0 || pchn->tre_speed == 0)
+		return;
+	
+	if(!(pchn->achn->flags & SACKIT_ACHN_PLAYING))
+		return;
+	
+	uint8_t offs = (uint8_t)pchn->tre_offs;
+	
+	switch(pchn->vib_type&3)
+	{
+		case 0: // sine
+			v = fine_sine_data[offs];
+			break;
+		case 1: // ramp down
+			v = fine_ramp_down_data[offs];
+			break;
+		case 2: // square
+			v = fine_square_wave[offs];
+			break;
+		case 3: // random - NOT EASILY TESTABLE
+			// TODO!
+			v = 0;
+			break;
+	}
+	
+	v = v*pchn->tre_depth;
+	//if(sackit->module->header.flags & IT_MOD_OLDFX)
+	//	v = ~(v<<1);
+	int negdepth = (v < 0);
+	if(negdepth)
+		v = ~v;
+	v = (v+64)>>7;
+	if(negdepth) v = -v;
+	
+	v += pchn->achn->vol;
+	if(v < 0) v = 0;
+	if(v > 64) v = 64;
+	pchn->achn->vol = v; 
+}
+
+void sackit_effect_tremolo(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
+{
+	int32_t v;
+	
+	if(pchn->achn == NULL || pchn->achn->ofreq == 0 || pchn->tre_speed == 0)
+		return;
+	
+	if(!(pchn->achn->flags & SACKIT_ACHN_PLAYING))
+		return;
+	
+	pchn->tre_offs += pchn->tre_speed;
+	
+	// apply.
+	sackit_effect_tremolo_nooffs(sackit, pchn);
+}
+
 void sackit_effect_tremor(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 {
 	if(!(pchn->trm_flags & 1))

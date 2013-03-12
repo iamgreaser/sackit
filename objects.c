@@ -397,6 +397,10 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->vib_offs = 0;
 	pchn->vib_type = 0;
 	pchn->vib_lins = 0;
+	pchn->tre_speed = 0;
+	pchn->tre_depth = 0;
+	pchn->tre_offs = 0;
+	pchn->tre_type = 0;
 	pchn->trm_val = 0;
 	pchn->trm_flags = 0;
 	pchn->trm_cur_on = 0;
@@ -420,6 +424,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->eff_misc = 0;
 	pchn->eff_arpeggio = 0;
 	pchn->eff_vibrato = 0;
+	pchn->eff_tremolo = 0;
 	pchn->eff_tempo = 0;
 	pchn->eff_tremor = 0x11;
 	pchn->eff_retrig = 0x00;

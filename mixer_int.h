@@ -232,6 +232,7 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 				int32_t v  = ((v0*((65535-zsuboffs)))>>16)
 					+ ((v1*(zsuboffs))>>16);
 				//int32_t v = v0 + (((v1-v0)*(zsuboffs>>1))>>15);
+				//v = v0;
 				
 				if(ramprem > 0)
 				{

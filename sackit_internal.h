@@ -18,6 +18,8 @@ void sackit_effect_pitchslide_fine(sackit_playback_t *sackit, sackit_pchannel_t 
 void sackit_effect_portaslide(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int16_t amt);
 void sackit_effect_vibrato_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_vibrato(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
+void sackit_effect_tremolo_nooffs(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
+void sackit_effect_tremolo(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_tremor(sackit_playback_t *sackit, sackit_pchannel_t *pchn);
 void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int first_note);
 void sackit_effect_samplevibrato(sackit_playback_t *sackit, sackit_achannel_t *achn);

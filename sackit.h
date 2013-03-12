@@ -214,6 +214,10 @@ struct sackit_pchannel
 	uint16_t vib_offs;
 	uint16_t vib_type;
 	uint16_t vib_lins;
+	uint16_t tre_speed;
+	int16_t tre_depth;
+	uint16_t tre_offs;
+	uint16_t tre_type;
 	uint8_t trm_val;
 	uint8_t trm_flags;
 	uint8_t trm_cur_on;
@@ -235,6 +239,7 @@ struct sackit_pchannel
 	uint8_t eff_misc;
 	uint8_t eff_arpeggio;
 	uint8_t eff_vibrato;
+	uint8_t eff_tremolo;
 	uint8_t eff_tempo;
 	uint8_t eff_tremor;
 	uint8_t eff_retrig;

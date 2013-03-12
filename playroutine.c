@@ -23,6 +23,7 @@ void sackit_update_effects(sackit_playback_t *sackit)
 			pchn->achn->ofreq = pchn->achn->freq;
 		
 		sackit_effect_vibrato(sackit, pchn);
+		sackit_effect_tremolo(sackit, pchn);
 		
 		uint16_t arp = (pchn->arpeggio>>4)&15;
 		if(arp != 0)

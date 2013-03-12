@@ -75,6 +75,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	pchn->arpeggio = 0;
 	pchn->vib_speed = 0;
 	pchn->vib_depth = 0;
+	pchn->tre_speed = 0;
+	pchn->tre_depth = 0;
 	pchn->trm_flags &= ~1;
 	pchn->rtg_flags &= ~1;
 	pchn->rtg_val = 0;
@@ -95,6 +97,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	int flag_slide_porta = 0;
 	int flag_retrig = 0;
 	int flag_vibrato = 0;
+	int flag_tremolo = 0;
 	int flag_done_instrument = 0;
 	int flag_nna_set = -1;
 	int flag_s7x = -1;
@@ -256,6 +259,21 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			
 			break;
 		
+		case 0x12: // Rxx - (tremolo)
+			// TODO: check if x,y independent
+			if((efp&0x0F) == 0)
+				efp |= (pchn->eff_tremolo&0x0F);
+			if((efp&0xF0) == 0)
+				efp |= (pchn->eff_tremolo&0xF0);
+			
+			pchn->eff_tremolo = efp;
+			
+			pchn->tre_speed += (efp>>4)*4;
+			pchn->tre_depth += (efp&15)*(eft == 0x15 ? 1 : 4);
+			
+			//if(!(sackit->module->header.flags & IT_MOD_OLDFX))
+			flag_tremolo = 1;
+			break;
 		case 0x13: // Sxx - (miscellaneous)
 			if(efp == 0)
 			{
@@ -746,6 +764,10 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		} else {
 			sackit_effect_vibrato(sackit, pchn);
 		}
+	}
+	if(flag_tremolo)
+	{
+		sackit_effect_tremolo(sackit, pchn);
 	}
 	sackit_effect_tremor(sackit, pchn);
 }
