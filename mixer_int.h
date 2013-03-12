@@ -26,31 +26,10 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 	{
 		int32_t rampmul = sackit->anticlick;
 		sackit->anticlick = 0;
-		int32_t ramprem = ramplen;
-		int32_t rampdelta = (0-rampmul);
-		int negdepth = (rampdelta < 0);
-		int32_t rampdelta_i = rampdelta;
-		if(negdepth)
-			rampdelta = -rampdelta;
-		int32_t rampspd = (rampdelta+0x0080)&~0x00FF;
-		
-		rampspd = rampspd / (ramplen+1);
-		
-		rampspd &= ~3;
-		
-		if(negdepth)
-		{
-			rampspd = -rampspd;
-			//rampspd -= 4;
-		}
 		
 		for(j = 0; j < ramplen; j++)
 		{
-			mixbuf[j] += rampmul;
-			int32_t nm = rampmul + rampspd;
-			if((nm*rampmul) <= 0)
-				break;
-			rampmul = nm;
+			mixbuf[j] += (((int32_t)rampmul)*(int32_t)(ramplen-j-1))/ramplen;
 		}
 	}
 #endif
