@@ -141,6 +141,12 @@ int main(int argc, char *argv[])
 	
 	sackit_playback_free(sackit);
 	sackit_module_free(module);
+
+	free(sound_buf);
+	free(sound_queue);
+
+	// to help shut valgrind up
+	SDL_Quit();
 	
 	return 0;
 }

@@ -1,4 +1,5 @@
 RM = rm
+RANLIB = ranlib
 
 CFLAGS = -g -fPIC -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
 LDFLAGS = -g -fPIC
@@ -14,22 +15,27 @@ OBJS_MIXER = mixer.o
 OBJS = effects.o fixedmath.o $(OBJS_MIXER) objects.o playroutine.o playroutine_effects.o playroutine_nna.o tables.o
 
 LIBSACKIT_SO = libsackit.so
+LIBSACKIT_A = libsackit.a
 SACKIT_COMPARE = sackit_compare
 SACKIT_PLAY = sackit_play
 
-all: $(LIBSACKIT_SO) $(SACKIT_COMPARE) $(SACKIT_PLAY)
+all: $(LIBSACKIT_SO) $(LIBSACKIT_A) $(SACKIT_COMPARE) $(SACKIT_PLAY)
 
 clean:
 	$(RM) -f $(OBJS)
 
-$(SACKIT_COMPARE): $(LIBSACKIT_SO) app_compare.c
-	$(CC) -o $(SACKIT_COMPARE) app_compare.c ./$(LIBSACKIT_SO) $(CFLAGS_COMPARE) $(LDFLAGS_COMPARE)
+$(SACKIT_COMPARE): $(LIBSACKIT_A) app_compare.c
+	$(CC) -o $(SACKIT_COMPARE) app_compare.c ./$(LIBSACKIT_A) $(CFLAGS_COMPARE) $(LDFLAGS_COMPARE)
 
-$(SACKIT_PLAY): $(LIBSACKIT_SO) app_play.c
-	$(CC) -o $(SACKIT_PLAY) app_play.c ./$(LIBSACKIT_SO) $(CFLAGS_PLAY) $(LDFLAGS_PLAY)
+$(SACKIT_PLAY): $(LIBSACKIT_A) app_play.c
+	$(CC) -o $(SACKIT_PLAY) app_play.c ./$(LIBSACKIT_A) $(CFLAGS_PLAY) $(LDFLAGS_PLAY)
 
 $(LIBSACKIT_SO): $(OBJS)
 	$(CC) -shared -o $(LIBSACKIT_SO) $(OBJS) $(LDFLAGS)
+
+$(LIBSACKIT_A): $(OBJS)
+	$(AR) rf $(LIBSACKIT_A) $(OBJS) 
+	$(RANLIB) $(LIBSACKIT_A)
 
 mixer.o: mixer.c mixer_*.h $(INCLUDES)
 	$(CC) -c -o mixer.o $(CFLAGS) mixer.c

@@ -20,7 +20,22 @@ it_module_t *sackit_module_new(void)
 
 void sackit_module_free(it_module_t *module)
 {
-	// TODO!
+	int i;
+
+	for(i = 0; i < MAX_INSTRUMENTS; i++)
+		if(module->instruments[i] != NULL)
+			free(module->instruments[i]);
+	for(i = 0; i < MAX_SAMPLES; i++)
+		if(module->samples[i] != NULL)
+		{
+			if(module->samples[i]->data != NULL)
+				free(module->samples[i]->data);
+
+			free(module->samples[i]);
+		}
+	for(i = 0; i < MAX_PATTERNS; i++)
+		if(module->patterns[i] != NULL)
+			free(module->patterns[i]);
 	
 	free(module);
 }
@@ -319,8 +334,11 @@ it_module_t *sackit_module_load(char *fname)
 
 void sackit_playback_free(sackit_playback_t *sackit)
 {
-	// TODO!
-	
+	if(sackit->buf != NULL)
+		free(sackit->buf);
+	if(sackit->mixbuf != NULL)
+		free(sackit->mixbuf);
+
 	free(sackit);
 }
 
@@ -495,3 +513,4 @@ sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int ach
 	
 	return sackit;
 }
+
