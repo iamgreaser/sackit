@@ -86,7 +86,7 @@ it_module_t *sackit_module_load(const char *fname)
 	}
 	
 	module->header.song_name[25] = 0x00;
-	printf("module name: \"%s\"\n", module->header.song_name);
+	//printf("module name: \"%s\"\n", module->header.song_name);
 	
 	if(fread(module->orders, module->header.ordnum, 1, fp) != 1)
 	{
@@ -486,7 +486,7 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 	sackit->mixeridx = mixeridx;
 	sackit->buf_len = buf_len;
 	sackit->buf_tick_rem = 0;
-	printf("%i\n", buf_len);
+	//printf("%i\n", buf_len);
 	sackit->buf = malloc(sizeof(int16_t)*itmixer_bytes[mixeridx]*sackit->buf_len);
 	sackit->mixbuf = malloc(sizeof(int32_t)*itmixer_bytes[mixeridx]*sackit->buf_len);
 	

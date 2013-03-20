@@ -86,12 +86,21 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 			{
 				vl = 0x100;
 				vr = -0x100;
-			} else if(pan <= 32) {
-				vl = 0x100;
-				vr = pan<<3;
 			} else {
-				vl = (64-pan)<<3;
-				vr = 0x100;
+				if(pan <= 32)
+				{
+					vl = 0x100;
+					vr = pan<<3;
+				} else {
+					vl = (64-pan)<<3;
+					vr = 0x100;
+				}
+
+				int sep = sackit->module->header.sep;
+				vl = 0x100 * (128-sep) + vl * sep;
+				vr = 0x100 * (128-sep) + vr * sep;
+				vl >>= 7;
+				vr >>= 7;
 			}
 #endif
 
