@@ -294,6 +294,8 @@ it_module_t *sackit_module_load(char *fname)
 				if(!(smp->cvt & 0x01))
 				{
 					// TODO!
+					for(j = 0; j < (int)smp->length; j++)
+						smp->data[j] ^= 0x8000;
 				}
 				
 				// TODO: other conversion flags
