@@ -18,7 +18,7 @@ uint32_t palette[4] = {
 };
 
 volatile int sound_ready = 1;
-volatile int16_t *sound_buf = NULL;
+int16_t *sound_buf = NULL;
 int16_t *sound_queue = NULL;
 int sound_queue_pos = (int)(((unsigned int)-1)>>1);
 

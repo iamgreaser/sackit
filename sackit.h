@@ -176,7 +176,7 @@ struct sackit_achannel
 	int32_t lramp;
 	int16_t fadeout;
 
-	int32_t anticlick;
+	int32_t anticlick[2];
 	
 	int32_t svib_speed;
 	int32_t svib_type;
@@ -291,7 +291,7 @@ typedef struct sackit_playback
 	int32_t *mixbuf;
 	
 	uint8_t gv,mv;
-	int32_t anticlick;
+	int32_t anticlick[2];
 	
 	uint16_t achn_count;
 	sackit_pchannel_t pchn[64];

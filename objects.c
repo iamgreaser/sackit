@@ -372,7 +372,8 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->iv = 128;
 	achn->pan = 32;
 
-	achn->anticlick = 0;
+	achn->anticlick[0] = 0;
+	achn->anticlick[1] = 0;
 	
 	achn->svib_speed = 0;
 	achn->svib_type = 0;
@@ -478,7 +479,8 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 	
 	sackit->gv = sackit->module->header.gv;
 	sackit->mv = sackit->module->header.mv;
-	sackit->anticlick = 0;
+	sackit->anticlick[0] = 0;
+	sackit->anticlick[1] = 0;
 	
 	sackit->tempo = sackit->module->header.it;
 	
