@@ -40,7 +40,7 @@ void sackit_module_free(it_module_t *module)
 	free(module);
 }
 
-it_module_t *sackit_module_load(char *fname)
+it_module_t *sackit_module_load(const char *fname)
 {
 	int i,j;
 	

@@ -301,7 +301,7 @@ typedef struct sackit_playback
 // objects.c
 it_module_t *sackit_module_new(void);
 void sackit_module_free(it_module_t *module);
-it_module_t *sackit_module_load(char *fname);
+it_module_t *sackit_module_load(const char *fname);
 void sackit_playback_free(sackit_playback_t *sackit);
 void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count, int mixeridx);
 sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count, int mixeridx);
