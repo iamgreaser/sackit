@@ -30,13 +30,20 @@ uint32_t sackit_div_int_32_32_to_fixed_16(uint32_t a, uint32_t b);
 
 // mixer_*.c
 void sackit_playback_mixstuff_it211(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it211s(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it211l(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it211ls(sackit_playback_t *sackit, int offs, int len);
 void sackit_playback_mixstuff_it212(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it212s(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it212l(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it212ls(sackit_playback_t *sackit, int offs, int len);
 
 // objects.c
 void sackit_playback_reset_achn(sackit_achannel_t *achn);
 void sackit_playback_reset_pchn(sackit_pchannel_t *pchn);
 
 // playroutine.c
+extern int itmixer_bytes[];
 void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int offs);
 void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pchn,
 	uint8_t note, uint8_t ins, uint8_t vol, uint8_t eft, uint8_t efp);

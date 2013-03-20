@@ -10,6 +10,17 @@
 
 #define SACKIT_MAX_ACHANNEL 256
 
+enum {
+	MIXER_IT211 = 0,
+	MIXER_IT211S,
+	MIXER_IT211L,
+	MIXER_IT211LS,
+	MIXER_IT212,
+	MIXER_IT212S,
+	MIXER_IT212L,
+	MIXER_IT212LS,
+};
+
 typedef struct it_pattern
 {
 	uint16_t length;
@@ -160,6 +171,7 @@ struct sackit_achannel
 	int32_t suboffs;
 	uint16_t flags;
 	uint8_t vol,sv,iv,cv; // TODO: more stuff
+	uint8_t pan;
 	uint16_t fv;
 	int32_t lramp;
 	int16_t fadeout;
@@ -193,6 +205,7 @@ struct sackit_pchannel
 	uint8_t note;
 	uint8_t lins;
 	uint8_t cv;
+	uint8_t pan;
 	uint8_t vol;
 	
 	uint8_t nna;
@@ -273,6 +286,7 @@ typedef struct sackit_playback
 	
 	uint32_t buf_len;
 	uint32_t buf_tick_rem;
+	int mixeridx;
 	int16_t *buf;
 	int32_t *mixbuf;
 	
@@ -289,8 +303,8 @@ it_module_t *sackit_module_new(void);
 void sackit_module_free(it_module_t *module);
 it_module_t *sackit_module_load(char *fname);
 void sackit_playback_free(sackit_playback_t *sackit);
-void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count);
-sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count);
+void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count, int mixeridx);
+sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count, int mixeridx);
 
 // playroutine.c
 void sackit_playback_update(sackit_playback_t *sackit);

@@ -421,6 +421,12 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			
 			efp = eh = el = 0;
 			break;
+
+		case 0x18: // Xxx - (panning)
+			pchn->pan = (pchn->pan & 0x80) | ((efp+2)>>2);
+			if(pchn->achn != NULL)
+				pchn->achn->pan = pchn->pan;
+			break;
 	}
 	
 	switch(eft)
@@ -530,6 +536,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		// DO NOTHING
 	} else if (vol <= 192) {
 		// panning
+		pchn->pan = (pchn->pan & 0x80) | (vol-128);
+		if(pchn->achn != NULL)
+			pchn->achn->pan = pchn->pan;
 	} else if (vol <= 202) {
 		// Gx
 		

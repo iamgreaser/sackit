@@ -4,6 +4,11 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 	
 	int i,j;
 	int offsend = offs+len;
+#ifdef MIXER_STEREO
+	int pan, vl, vr;
+	offs *= 2;
+	offsend *= 2;
+#endif
 	
 	int16_t *buf = &(sackit->buf[offs]);
 	int32_t *mixbuf = (int32_t *)&(sackit->mixbuf[offs]);
@@ -17,8 +22,12 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 	
 	int32_t gvol = sackit->gv; // 7
 	int32_t mvol = sackit->mv; // 7
-	
+
+#ifdef MIXER_STEREO
+	for(j = 0; j < len*2; j++)
+#else
 	for(j = 0; j < len; j++)
+#endif
 		mixbuf[j] = 0;
 	
 #ifdef MIXER_ANTICLICK
@@ -29,7 +38,12 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 		
 		for(j = 0; j < ramplen; j++)
 		{
+#ifdef MIXER_STEREO
+			mixbuf[j*2] += (((int32_t)rampmul)*(int32_t)(ramplen-j-1))/ramplen;
+			mixbuf[j*2+1] += (((int32_t)rampmul)*(int32_t)(ramplen-j-1))/ramplen;
+#else
 			mixbuf[j] += (((int32_t)rampmul)*(int32_t)(ramplen-j-1))/ramplen;
+#endif
 		}
 	}
 #endif
@@ -63,8 +77,24 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 		achn->anticlick = 0;
 #endif
 		
+		// TODO: ramp stereowise properly
 		if(achn->flags & SACKIT_ACHN_MIXING)
 		{
+#ifdef MIXER_STEREO
+			pan = achn->pan;
+			if(pan == 100)
+			{
+				vl = 0x100;
+				vr = -0x100;
+			} else if(pan <= 32) {
+				vl = 0x100;
+				vr = pan<<3;
+			} else {
+				vl = (64-pan)<<3;
+				vr = 0x100;
+			}
+#endif
+
 			int32_t zoffs = achn->offs;
 			int32_t zsuboffs = achn->suboffs;
 			int32_t zfreq = achn->ofreq;
@@ -201,6 +231,7 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 			
 			//printf("%i\n", rampspd);
 			for(j = 0; j < len; j++) {
+#ifdef MIXER_INTERP_LINEAR
 				// get sample value
 				int32_t v0 = zdata[zoffs];
 				int32_t v1 = ((zoffs+1) == zlength
@@ -210,8 +241,9 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 					: zdata[(zoffs+1)]);
 				int32_t v  = ((v0*((65535-zsuboffs)))>>16)
 					+ ((v1*(zsuboffs))>>16);
-				//int32_t v = v0 + (((v1-v0)*(zsuboffs>>1))>>15);
-				//v = v0;
+#else
+				int32_t v = zdata[zoffs];
+#endif
 				
 				if(ramprem > 0)
 				{
@@ -223,7 +255,12 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 				}
 				
 				// mix
+#ifdef MIXER_STEREO
+				mixbuf[j*2] += v*vl>>8;
+				mixbuf[j*2+1] += v*vr>>8;
+#else
 				mixbuf[j] += v;
+#endif
 #ifdef MIXER_ANTICLICK
 				achn->anticlick = v;
 #endif
@@ -278,7 +315,11 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 	}
 	
 	// stick into the buffer
+#ifdef MIXER_STEREO
+	for(j = 0; j < len*2; j++)
+#else
 	for(j = 0; j < len; j++)
+#endif
 	{
 		int32_t bv = -mixbuf[j];
 		//bv = (bv*mvol+64)>>7;
@@ -288,3 +329,4 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 		buf[j] = bv;
 	}
 }
+

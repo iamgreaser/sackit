@@ -220,7 +220,9 @@ it_module_t *sackit_module_load(char *fname)
 								{
 									// bail out
 									fprintf(stderr,
-										"IT214 block error [%i]: invalid width %i\n"
+										"IT214 block error [%08X/%08X/%i]: invalid width %i\n"
+										, ftell(fp) - blklen - 2
+										, ftell(fp) - blklen + (boffs>>3)
 										, j
 										, dw);
 									break;
@@ -348,6 +350,7 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->fv = 0;
 	achn->cv = 0;
 	achn->iv = 128;
+	achn->pan = 32;
 
 	achn->anticlick = 0;
 	
@@ -382,6 +385,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	
 	pchn->cv = 64;
 	pchn->vol = 0;
+	pchn->pan = 32;
 	
 	pchn->slide_vol = 0;
 	pchn->slide_vol_cv = 0;
@@ -433,7 +437,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->sample = NULL;
 }
 
-void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count)
+void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count, int mixeridx)
 {
 	int i;
 	
@@ -459,10 +463,12 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 	sackit->tempo = sackit->module->header.it;
 	
 	sackit->achn_count = achn_count;
+	sackit->mixeridx = mixeridx;
 	sackit->buf_len = buf_len;
 	sackit->buf_tick_rem = 0;
-	sackit->buf = malloc(sizeof(int16_t)*2*sackit->buf_len);
-	sackit->mixbuf = malloc(sizeof(int32_t)*2*sackit->buf_len);
+	printf("%i\n", buf_len);
+	sackit->buf = malloc(sizeof(int16_t)*itmixer_bytes[mixeridx]*sackit->buf_len);
+	sackit->mixbuf = malloc(sizeof(int32_t)*itmixer_bytes[mixeridx]*sackit->buf_len);
 	
 	for(i = 0; i < SACKIT_MAX_ACHANNEL; i++)
 		sackit_playback_reset_achn(&(sackit->achn[i]));
@@ -474,15 +480,16 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 		sackit->pchn[i].achn->parent = &(sackit->pchn[i]);*/
 		
 		sackit->pchn[i].cv = sackit->module->header.chnl_vol[i];
+		sackit->pchn[i].pan = sackit->module->header.chnl_pan[i];
 	}
 }
 
-sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count)
+sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count, int mixeridx)
 {
 	// allocate
 	sackit_playback_t *sackit = malloc(sizeof(sackit_playback_t));
 	sackit->module = module;
-	sackit_playback_reset(sackit, buf_len, achn_count);
+	sackit_playback_reset(sackit, buf_len, achn_count, mixeridx);
 	
 	return sackit;
 }

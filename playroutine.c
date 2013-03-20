@@ -1,6 +1,17 @@
 #include "sackit_internal.h"
 
-void (*fn_itmixer)(sackit_playback_t *sackit, int offs, int len) = sackit_playback_mixstuff_it212;
+void (*(fnlist_itmixer[]))(sackit_playback_t *sackit, int offs, int len) = {
+	sackit_playback_mixstuff_it211,
+	sackit_playback_mixstuff_it211s,
+	sackit_playback_mixstuff_it211l,
+	sackit_playback_mixstuff_it211ls,
+	sackit_playback_mixstuff_it212,
+	sackit_playback_mixstuff_it212s,
+	sackit_playback_mixstuff_it212l,
+	sackit_playback_mixstuff_it212ls,
+};
+
+int itmixer_bytes[] = { 2, 4, 2, 4, 2, 4, 2, 4 };
 
 void sackit_update_effects(sackit_playback_t *sackit)
 {
@@ -306,6 +317,9 @@ void sackit_tick(sackit_playback_t *sackit)
 		// Set note volume to volume set for each channel
 		if(achn->parent != NULL && achn->parent->achn == achn)
 			achn->vol = achn->parent->vol;
+		// not on the graph D:
+		if(achn->parent != NULL && achn->parent->achn == achn)
+			achn->pan = achn->parent->pan;
 		
 		// Set note frequency to frequency set for each channel
 		if(achn->parent != NULL && achn->parent->achn == achn)
@@ -507,7 +521,7 @@ void sackit_playback_update(sackit_playback_t *sackit)
 	{
 		if(sackit->buf_tick_rem != 0)
 		{
-			fn_itmixer(sackit, offs, sackit->buf_tick_rem);
+			fnlist_itmixer[sackit->mixeridx](sackit, offs, sackit->buf_tick_rem);
 			offs += sackit->buf_tick_rem;
 		}
 		
@@ -518,8 +532,9 @@ void sackit_playback_update(sackit_playback_t *sackit)
 	
 	if(offs != (int)sackit->buf_len)
 	{
-		fn_itmixer(sackit, offs, sackit->buf_len-offs);
+		fnlist_itmixer[sackit->mixeridx](sackit, offs, sackit->buf_len-offs);
 		sackit->buf_tick_rem -= sackit->buf_len-offs;
 	}
 	//printf("rem %i row %i\n", sackit->buf_tick_rem, sackit->process_row);
 }
+
