@@ -380,13 +380,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			
 			if(efp < 0x10)
 			{
-				sackit->tempo -= efp;
-				if(sackit->tempo < 32)
-					sackit->tempo = 32;
+				sackit->tempo_inc = -efp;
 			} else if(efp < 0x20) {
-				sackit->tempo += efp-0x10;
-				if(sackit->tempo > 255)
-					sackit->tempo = 255;
+				sackit->tempo_inc = efp-0x10;
 			} else {
 				sackit->tempo = efp;
 			}

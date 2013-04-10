@@ -283,6 +283,7 @@ typedef struct sackit_playback
 	uint16_t pat_row;
 	
 	uint16_t tempo;
+	int16_t tempo_inc;
 	
 	uint32_t buf_len;
 	uint32_t buf_tick_rem;

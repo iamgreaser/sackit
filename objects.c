@@ -465,6 +465,7 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 	sackit->current_tick = 1;
 	sackit->max_tick = sackit->module->header.is;
 	sackit->row_counter = 1;
+	sackit->tempo_inc = 0;
 	
 	sackit->current_row = 0xFFFE;
 	sackit->process_row = 0xFFFE;

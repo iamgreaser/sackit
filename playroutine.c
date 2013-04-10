@@ -17,6 +17,12 @@ void sackit_update_effects(sackit_playback_t *sackit)
 {
 	int i;
 	
+	sackit->tempo += sackit->tempo_inc;
+	if(sackit->tempo < 32)
+		sackit->tempo = 32;
+	if(sackit->tempo > 255)
+		sackit->tempo = 255;
+	
 	for(i = 0; i < 64; i++)
 	{
 		sackit_pchannel_t *pchn = &(sackit->pchn[i]);
@@ -56,7 +62,6 @@ void sackit_update_effects(sackit_playback_t *sackit)
 			if(pchn->note_cut == 0)
 				sackit_nna_note_cut(sackit, pchn->achn);
 		}
-		
 		
 		if(pchn->note_delay != 0)
 		{
@@ -144,6 +149,8 @@ void sackit_update_pattern(sackit_playback_t *sackit)
 		sackit->pat_row++;
 	}
 	
+	sackit->tempo_inc = 0;
+
 	for(i = 0; i < 64; i++)
 		sackit_update_effects_chn(sackit, &(sackit->pchn[i]),
 			note[i], ins[i], vol[i], eft[i], efp[i]);
