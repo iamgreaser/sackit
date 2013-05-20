@@ -285,6 +285,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			}
 			switch(eh)
 			{
+				case 0x6: // S6x - (delay by x ticks)
+					sackit->current_tick += el;
+					break;
 				case 0x7: // S7x - (misc ins stuff)
 				switch(el)
 				{
