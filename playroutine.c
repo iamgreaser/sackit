@@ -529,8 +529,8 @@ void sackit_playback_update(sackit_playback_t *sackit)
 		if(sackit->buf_tick_rem != 0)
 		{
 			fnlist_itmixer[sackit->mixeridx](sackit, offs, sackit->buf_tick_rem);
-			offs += sackit->buf_tick_rem;
 		}
+		offs += sackit->buf_tick_rem;
 		
 		sackit_tick(sackit);
 		// TODO: set freq somewhere

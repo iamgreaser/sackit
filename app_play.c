@@ -50,12 +50,89 @@ void test_sdl_callback(void *userdata, Uint8 *stream, int len)
 	}
 }
 
+int play_a_sound = 1;
+
+#ifdef __EMSCRIPTEN__
+sackit_playback_t *sackit_glb;
+#endif
+
+int mainloop(sackit_playback_t *sackit)
+{
+	int x, y;
+#ifndef __EMSCRIPTEN__
+	uint32_t *pbuf = screen->pixels;
+	int divpitch = screen->pitch/sizeof(uint32_t);
+#endif
+
+	int quitflag = 0;
+
+	SDL_Event ev;
+#ifndef __EMSCRIPTEN__
+	while(SDL_PollEvent(&ev))
+	switch(ev.type)
+	{
+		case SDL_KEYDOWN:
+			play_a_sound = 1;
+			break;
+		case SDL_QUIT:
+			quitflag = 1;
+			break;
+	}
+#endif
+		
+	if(play_a_sound && sound_ready)
+	{
+		//play_a_sound = 0;
+		sackit_playback_update(sackit);
+		
+		// VISUALISE
+#ifndef __EMSCRIPTEN__
+		memset(screen->pixels, 0, screen->pitch*screen->h);
+		for(x = 0; x < screen->w*2; x++)
+		{
+			int yb = sackit->buf[x];
+			
+			if((x&1) == 0)
+			{
+				y = 0;
+				y = (y+0x8000)*screen->h/0x10000;
+				y = screen->h-1-y;
+				pbuf[divpitch*y+(x>>1)] = 0xFFFFFF;
+			}
+			
+			y = yb;
+			y = (y+0x8000)*screen->h/0x10000;
+			y = screen->h-1-y;
+			pbuf[divpitch*y+(x>>1)] |= ((x&1) ? 0x0000FF : 0xFF0000);
+		}
+		
+		SDL_Flip(screen);
+#endif
+		
+		int16_t *nvbuf = (int16_t *)sound_buf;
+		memcpy(nvbuf, sackit->buf, 4096*4);
+		sound_ready = 0;
+	}
+
+	return quitflag;
+}
+
+#ifdef __EMSCRIPTEN__
+void mainloop_em(void)
+{
+	mainloop(sackit_glb);
+}
+#endif
 
 int main(int argc, char *argv[])
 {
 	int x,y,i;
 	
+#ifdef STATIC_FNAME
+	it_module_t *module = sackit_module_load(STATIC_FNAME);
+#else
 	it_module_t *module = sackit_module_load(argv[1]);
+#endif
 	
 	if(module == NULL)
 		return 1;
@@ -63,6 +140,7 @@ int main(int argc, char *argv[])
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE);
 	
 	SDL_WM_SetCaption("sackit IT player", NULL);
+#ifndef __EMSCRIPTEN__
 	screen = SDL_SetVideoMode(800, 600, 32, 0);
 	
 	// draw something
@@ -71,6 +149,7 @@ int main(int argc, char *argv[])
 	for(y = 0; y < screen->h; y++)
 		for(x = 0; x < screen->w; x++)
 			pbuf[divpitch*y+x] = 0x00000000;
+#endif
 	
 	sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT212S);
 	
@@ -78,7 +157,7 @@ int main(int argc, char *argv[])
 	aspec.freq = 44100;
 	aspec.format = AUDIO_S16SYS;
 	aspec.channels = 2;
-	aspec.samples = 4096;
+	aspec.samples = 512;
 	aspec.callback = test_sdl_callback;
 	sound_buf = calloc(1,4096*4);
 	sound_queue = calloc(1,4096*4);
@@ -86,59 +165,16 @@ int main(int argc, char *argv[])
 	SDL_PauseAudio(0);
 	
 	int refoffs = 0;
-	
-	int play_a_sound = 1;
-	
-	int quitflag = 0;
-	while(!quitflag)
+
+#ifdef __EMSCRIPTEN__
+	sackit_glb = sackit;
+	emscripten_set_main_loop(mainloop_em);
+#else
+	while(!mainloop(sackit))
 	{
-		SDL_Event ev;
-		while(SDL_PollEvent(&ev))
-		switch(ev.type)
-		{
-			case SDL_KEYDOWN:
-				play_a_sound = 1;
-				break;
-			case SDL_QUIT:
-				quitflag = 1;
-				break;
-		}
-		
-		if(play_a_sound && sound_ready)
-		{
-			//play_a_sound = 0;
-			sackit_playback_update(sackit);
-			
-			// VISUALISE
-			memset(screen->pixels, 0, screen->pitch*screen->h);
-			for(x = 0; x < screen->w*2; x++)
-			{
-				int yb = sackit->buf[x];
-				
-				if((x&1) == 0)
-				{
-					y = 0;
-					y = (y+0x8000)*screen->h/0x10000;
-					y = screen->h-1-y;
-					pbuf[divpitch*y+(x>>1)] = 0xFFFFFF;
-				}
-				
-				y = yb;
-				y = (y+0x8000)*screen->h/0x10000;
-				y = screen->h-1-y;
-				pbuf[divpitch*y+(x>>1)] |= ((x&1) ? 0x0000FF : 0xFF0000);
-			}
-			
-			SDL_Flip(screen);
-			
-			int16_t *nvbuf = (int16_t *)sound_buf;
-			memcpy(nvbuf, sackit->buf, 4096*4);
-			sound_ready = 0;
-		}
-		
 		SDL_Delay(10);
 	}
-	
+
 	sackit_playback_free(sackit);
 	sackit_module_free(module);
 
@@ -149,5 +185,6 @@ int main(int argc, char *argv[])
 	SDL_Quit();
 	
 	return 0;
+#endif
 }
 
