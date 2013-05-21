@@ -22,6 +22,11 @@ int16_t *sound_buf = NULL;
 int16_t *sound_queue = NULL;
 int sound_queue_pos = (int)(((unsigned int)-1)>>1);
 
+#ifdef __EMSCRIPTEN__
+float mozsux_expticks = -99999;
+float mozsux_curticks = -1;
+#endif
+
 void test_sdl_callback(void *userdata, Uint8 *stream, int len)
 {
 	int offs = 0;
@@ -83,7 +88,31 @@ int mainloop(sackit_playback_t *sackit)
 	if(play_a_sound && sound_ready)
 	{
 		//play_a_sound = 0;
+#ifdef __EMSCRIPTEN__
+		mozsux_curticks = SDL_GetTicks();
+		if(mozsux_expticks == -99999)
+			mozsux_expticks = mozsux_curticks - 1000;
+		if(mozsux_curticks >= mozsux_expticks)
+		{
+			//printf("%i\n", mozsux_curticks);
+			sackit_playback_update(sackit);
+
+			int16_t *nvbuf = (int16_t *)sound_buf;
+			memcpy(nvbuf, sackit->buf, 4096*4);
+			sound_ready = 0;
+
+			mozsux_expticks += 1000.0f*4096.0f/44100.0f;
+			SDL_PauseAudio(0);
+		} else {
+			SDL_PauseAudio(1);
+		}
+#else
 		sackit_playback_update(sackit);
+
+		int16_t *nvbuf = (int16_t *)sound_buf;
+		memcpy(nvbuf, sackit->buf, 4096*4);
+		sound_ready = 0;
+#endif
 		
 		// VISUALISE
 #ifndef __EMSCRIPTEN__
@@ -108,10 +137,6 @@ int mainloop(sackit_playback_t *sackit)
 		
 		SDL_Flip(screen);
 #endif
-		
-		int16_t *nvbuf = (int16_t *)sound_buf;
-		memcpy(nvbuf, sackit->buf, 4096*4);
-		sound_ready = 0;
 	}
 
 	return quitflag;
@@ -157,7 +182,11 @@ int main(int argc, char *argv[])
 	aspec.freq = 44100;
 	aspec.format = AUDIO_S16SYS;
 	aspec.channels = 2;
+#ifdef __EMSCRIPTEN__
 	aspec.samples = 512;
+#else
+	aspec.samples = 4096;
+#endif
 	aspec.callback = test_sdl_callback;
 	sound_buf = calloc(1,4096*4);
 	sound_queue = calloc(1,4096*4);
