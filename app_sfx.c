@@ -189,12 +189,13 @@ int main(int argc, char *argv[])
 		fread(&shnum, 2, 1, fp);
 
 		// look through program headers
+		printf("%016llX\n", phoff);
 		int i;
 		for(i = 0; i < phnum; i++)
 		{
 			int64_t hoffs, hlen;
 			hoffs = hlen = 0;
-			fseek(fp, phoff + i*phentsize + 0x08, SEEK_SET);
+			fseek(fp, phoff + i*phentsize + (is64 ? 0x08 : 0x04), SEEK_SET);
 			fread(&hoffs, is64 ? 8 : 4, 1, fp);
 			fseek(fp, phoff + i*phentsize + (is64 ? 0x20 : 0x10), SEEK_SET);
 			fread(&hlen, is64 ? 8 : 4, 1, fp);
@@ -210,16 +211,19 @@ int main(int argc, char *argv[])
 			int64_t hoffs, hlen;
 			int flags;
 			hoffs = hlen = 0;
-			fseek(fp, shoff + i*shentsize + 0x08, SEEK_SET);
+			fseek(fp, shoff + i*shentsize + (is64 ? 0x04 : 0x04), SEEK_SET);
 			fread(&flags, 4, 1, fp);
 			fseek(fp, shoff + i*shentsize + (is64 ? 0x18 : 0x10), SEEK_SET);
 			fread(&hoffs, is64 ? 8 : 4, 1, fp);
 			fread(&hlen, is64 ? 8 : 4, 1, fp);
-			printf("sect: %016llX, %016llX%s\n", hoffs, hlen, (flags & 0x100 ? " (NOBITS)" : ""));
+			printf("sect: %016llX, %016llX%s\n", hoffs, hlen, (flags == 8 ? " (NOBITS)" : ""));
 			hoffs += hlen;
-			if(((flags & 0x100) == 0) && hlen != 0 && hoffs > fboffs)
+			if((flags != 8) && hlen != 0 && hoffs > fboffs)
 				fboffs = hoffs;
 		}
+
+		if(fboffs < shoff + shnum*shentsize)
+			fboffs = shoff + shnum*shentsize;
 
 		fclose(fp);
 	}
