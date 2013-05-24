@@ -6,6 +6,10 @@
 
 #include <SDL.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include "sackit.h"
 
 SDL_Surface *screen = NULL;
@@ -102,6 +106,8 @@ int mainloop(sackit_playback_t *sackit)
 			sound_ready = 0;
 
 			mozsux_expticks += 1000.0f*4096.0f/44100.0f;
+			if(mozsux_expticks + 1500.0f < mozsux_curticks)
+				mozsux_expticks = mozsux_curticks - 1500.0f;
 			SDL_PauseAudio(0);
 		} else {
 			SDL_PauseAudio(1);
@@ -143,7 +149,7 @@ int mainloop(sackit_playback_t *sackit)
 }
 
 #ifdef __EMSCRIPTEN__
-void mainloop_em(void)
+void mainloop_em()
 {
 	mainloop(sackit_glb);
 }
@@ -197,7 +203,7 @@ int main(int argc, char *argv[])
 
 #ifdef __EMSCRIPTEN__
 	sackit_glb = sackit;
-	emscripten_set_main_loop(mainloop_em);
+	emscripten_set_main_loop(mainloop_em, 100, 1);
 #else
 	while(!mainloop(sackit))
 	{

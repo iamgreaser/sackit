@@ -40,7 +40,7 @@ void sackit_module_free(it_module_t *module)
 	free(module);
 }
 
-it_module_t *sackit_module_load(const char *fname)
+it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 {
 	int i,j;
 	
@@ -56,6 +56,7 @@ it_module_t *sackit_module_load(const char *fname)
 	it_module_t *module = sackit_module_new();
 	
 	// load header
+	fseek(fp, fboffs, SEEK_SET);
 	if(fread(&(module->header), sizeof(it_module_header_t), 1, fp) != 1)
 	{
 		fprintf(stderr, "sackit_module_load: could not read header\n");
@@ -113,7 +114,7 @@ it_module_t *sackit_module_load(const char *fname)
 	// instruments
 	for(i = 0; i < module->header.insnum; i++)
 	{
-		fseek(fp, offset_instruments[i], SEEK_SET);
+		fseek(fp, fboffs + offset_instruments[i], SEEK_SET);
 		module->instruments[i] = malloc(sizeof(it_instrument_t));
 		fread(module->instruments[i], sizeof(it_instrument_t), 1, fp);
 	}
@@ -121,7 +122,7 @@ it_module_t *sackit_module_load(const char *fname)
 	// samples
 	for(i = 0; i < module->header.smpnum; i++)
 	{
-		fseek(fp, offset_samples[i], SEEK_SET);
+		fseek(fp, fboffs + offset_samples[i], SEEK_SET);
 		it_sample_t *smp = malloc(sizeof(it_sample_t));
 		module->samples[i] = smp;
 		fread(smp, sizeof(it_sample_t)-sizeof(int16_t *), 1, fp);
@@ -130,7 +131,7 @@ it_module_t *sackit_module_load(const char *fname)
 		if(smp->samplepointer != 0 && smp->length != 0 && (smp->flg & IT_SMP_EXISTS))
 		{
 			// NO WE ARE NOT SUPPORTING STEREO SAMPLES PISS OFF MODPLUG
-			fseek(fp, smp->samplepointer, SEEK_SET);
+			fseek(fp, fboffs + smp->samplepointer, SEEK_SET);
 			smp->data = malloc(smp->length*sizeof(int16_t));
 			
 			// check compression flag
@@ -321,7 +322,7 @@ it_module_t *sackit_module_load(const char *fname)
 	// patterns
 	for(i = 0; i < module->header.patnum; i++)
 	{
-		fseek(fp, offset_patterns[i], SEEK_SET);
+		fseek(fp, fboffs + offset_patterns[i], SEEK_SET);
 		module->patterns[i] = malloc(sizeof(it_pattern_t));
 		fread(module->patterns[i], sizeof(it_pattern_t)-65536, 1, fp);
 		fread(8+(uint8_t *)module->patterns[i], module->patterns[i]->length, 1, fp);
@@ -517,3 +518,7 @@ sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int ach
 	return sackit;
 }
 
+it_module_t *sackit_module_load(const char *fname)
+{
+	return sackit_module_load_offs(fname, 0);
+}
