@@ -43,20 +43,69 @@
 #undef MIXER_ANTICLICK
 #undef MIXER_VER
 
-// IT212 mixer: IT211 with an anticlick filter for note cuts, interpolated
+// IT212 mixer, interpolated
 #define MIXER_NAME sackit_playback_mixstuff_it212l
 #define MIXER_VER 212
 #define MIXER_ANTICLICK
 #define MIXER_INTERP_LINEAR
-#include "mixer_int.h"
+#include "mixer_float.h"
 #undef MIXER_NAME
 
 #define MIXER_NAME sackit_playback_mixstuff_it212ls
 #define MIXER_STEREO
-#include "mixer_int.h"
+#include "mixer_float.h"
 #undef MIXER_STEREO
 #undef MIXER_NAME
 #undef MIXER_ANTICLICK
 #undef MIXER_VER
 #undef MIXER_INTERP_LINEAR
+
+// IT214 mixer: floating point mixer
+#define MIXER_NAME sackit_playback_mixstuff_it214
+#define MIXER_VER 214
+#define MIXER_ANTICLICK
+#include "mixer_float.h"
+#undef MIXER_NAME
+
+#define MIXER_NAME sackit_playback_mixstuff_it214s
+#define MIXER_STEREO
+#include "mixer_float.h"
+#undef MIXER_STEREO
+#undef MIXER_NAME
+#undef MIXER_ANTICLICK
+#undef MIXER_VER
+
+// IT214 mixer, interpolated linearly
+#define MIXER_NAME sackit_playback_mixstuff_it214l
+#define MIXER_VER 214
+#define MIXER_ANTICLICK
+#define MIXER_INTERP_LINEAR
+#include "mixer_float.h"
+#undef MIXER_NAME
+
+#define MIXER_NAME sackit_playback_mixstuff_it214ls
+#define MIXER_STEREO
+#include "mixer_float.h"
+#undef MIXER_STEREO
+#undef MIXER_NAME
+#undef MIXER_ANTICLICK
+#undef MIXER_VER
+#undef MIXER_INTERP_LINEAR
+
+// IT214 mixer, interpolated cubically
+#define MIXER_NAME sackit_playback_mixstuff_it214c
+#define MIXER_VER 214
+#define MIXER_ANTICLICK
+#define MIXER_INTERP_CUBIC
+#include "mixer_float.h"
+#undef MIXER_NAME
+
+#define MIXER_NAME sackit_playback_mixstuff_it214cs
+#define MIXER_STEREO
+#include "mixer_float.h"
+#undef MIXER_STEREO
+#undef MIXER_NAME
+#undef MIXER_ANTICLICK
+#undef MIXER_VER
+#undef MIXER_INTERP_CUBIC
 

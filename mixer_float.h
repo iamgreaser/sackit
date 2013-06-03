@@ -5,44 +5,40 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 	int i,j;
 	int offsend = offs+len;
 #ifdef MIXER_STEREO
-	int pan, vl, vr;
+	int pan;
+	float vl, vr;
 	offs *= 2;
 	offsend *= 2;
 #endif
 	
 	int16_t *buf = &(sackit->buf[offs]);
-	int32_t *mixbuf = (int32_t *)&(sackit->mixbuf[offs]);
+	float *mixbuf = (float *)&(sackit->mixbuf[offs]);
 	
 	// just a guess :)
-#if MIXER_VER <= 211
-	int32_t ramplen = tfreq/500+1;
-#else
 	int32_t ramplen = tfreq/400+1;
-#endif
 	
-	int32_t gvol = sackit->gv; // 7
-	int32_t mvol = sackit->mv; // 7
+	float gvol = sackit->gv; // 7
+	float mvol = sackit->mv; // 7
 
 #ifdef MIXER_STEREO
 	for(j = 0; j < len*2; j++)
 #else
 	for(j = 0; j < len; j++)
 #endif
-		mixbuf[j] = 0;
+		mixbuf[j] = 0.0f;
 	
-#ifdef MIXER_ANTICLICK
 #ifdef MIXER_STEREO
-	if(sackit->anticlick[0] != 0 || sackit->anticlick[1] != 0)
+	if(sackit->anticlick_f[0] != 0 || sackit->anticlick_f[1] != 0)
 	{
-		int32_t rampmul0 = sackit->anticlick[0];
-		int32_t rampmul1 = sackit->anticlick[1];
-		sackit->anticlick[0] = 0;
-		sackit->anticlick[1] = 0;
+		int32_t rampmul0 = sackit->anticlick_f[0];
+		int32_t rampmul1 = sackit->anticlick_f[1];
+		sackit->anticlick_f[0] = 0.0f;
+		sackit->anticlick_f[1] = 0.0f;
 #else
-	if(sackit->anticlick[0] != 0)
+	if(sackit->anticlick_f[0] != 0.0f)
 	{
-		int32_t rampmul = sackit->anticlick[0];
-		sackit->anticlick[0] = 0;
+		int32_t rampmul = sackit->anticlick_f[0];
+		sackit->anticlick_f[0] = 0.0f;
 #endif
 		
 		for(j = 0; j < ramplen; j++)
@@ -55,7 +51,6 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 #endif
 		}
 	}
-#endif
 
 	for(i = 0; i < sackit->achn_count; i++)
 	{
@@ -76,16 +71,14 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 		{
 			achn->flags &= ~SACKIT_ACHN_RAMP;
 			//ramprem = rampspd;
-			achn->lramp = 0;
+			achn->lramp_f = 0;
 			
 			//printf("ramp %i %i %i\n", i, rampspd, (32768+rampspd-1)/rampspd);
 			//printf("ramp %i %i %i\n", i, rampinc, ramprem);
 		}
 
-#ifdef MIXER_ANTICLICK
-		achn->anticlick[0] = 0;
-		achn->anticlick[1] = 0;
-#endif
+		achn->anticlick_f[0] = 0.0f;
+		achn->anticlick_f[1] = 0.0f;
 		
 		// TODO: ramp stereowise properly
 		if(achn->flags & SACKIT_ACHN_MIXING)
@@ -106,18 +99,21 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 					vr = 0x100;
 				}
 
+				// TODO: make this more accurate
 				int sep = sackit->module->header.sep;
 				vl = 0x100 * (128-sep) + vl * sep;
 				vr = 0x100 * (128-sep) + vr * sep;
-				vl >>= 7;
-				vr >>= 7;
+				vl /= 128.0f;
+				vr /= 128.0f;
 			}
+			vl /= 256.0f;
+			vr /= 256.0f;
 #endif
 
 			int32_t zoffs = achn->offs;
 			int32_t zsuboffs = achn->suboffs;
 			int32_t zfreq = achn->ofreq;
-			int32_t zlramp = achn->lramp;
+			float zlramp = achn->lramp_f;
 			
 			zfreq = sackit_div_int_32_32_to_fixed_16(zfreq,tfreq);
 			
@@ -152,141 +148,72 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 			if(achn->flags & SACKIT_ACHN_REVERSE)
 				zfreq = -zfreq;
 			
-			int32_t vol = 0x8000;
-			/*vol = ((int32_t)achn->vol) // 6
-				*((int32_t)achn->sv) // 6
-				*((int32_t)achn->cv) // 6
-				*gvol // 7
-			;
-			//vol += (1<<9);
-			vol >>= 10;
-			vol = (vol*mvol)>>7; // 7*/
-			// TODO: sort the order / rounding out
-			// 4) FV = Vol * SV * IV * CV * GV * VEV * NFC / 2^41
-			/*vol = (vol*((int32_t)achn->vol))>>6;
-			vol = (vol*((int32_t)achn->sv))>>6;
-			vol = (vol*((int32_t)achn->iv))>>7;
-			vol = (vol*((int32_t)achn->cv))>>6;
-			vol = (vol*gvol)>>7;
-			vol = (vol*((int32_t)achn->evol.y))>>6;
-			vol = (vol*((int32_t)achn->fadeout))>>10;
-			vol = (vol*mvol)>>7;*/
-			{
-				/*int64_t bvol = 0x8000;
-				bvol = (bvol*(int64_t)achn->evol.y)>>14;
-				bvol = (bvol*(int64_t)achn->vol)>>6;
-				bvol = (bvol*(int64_t)achn->sv)>>6;
-				bvol = (bvol*(int64_t)achn->iv)>>6;
-				bvol = (bvol*(int64_t)achn->cv)>>6;
-				bvol = (bvol*(int64_t)gvol)>>7;
-				bvol = (bvol*(int64_t)achn->fadeout)>>10;
-				bvol = (bvol*(int64_t)mvol)>>7;
-				vol = (bvol)>>1;*/
-				int64_t bvol = 1;
-				bvol = (bvol*(int64_t)achn->evol.y);
-				bvol = (bvol*(int64_t)achn->vol);
-				bvol = (bvol*(int64_t)achn->sv);
-				bvol = (bvol*(int64_t)achn->iv);
-				bvol = (bvol*(int64_t)achn->cv);
-				bvol = (bvol*(int64_t)gvol);
-				bvol = (bvol*(int64_t)achn->fadeout);
-				bvol = (bvol*(int64_t)mvol);
-				vol = (bvol)>>(1+14+6+6+6+6+7+10+7-15);
-			}
-			//printf("%04X\n", vol);
-			//vol += 0x0080;
-			//vol &= 0x7F00;
+			double vol = mvol*achn->evol.y*achn->vol*achn->sv*achn->iv*achn->cv*gvol*achn->fadeout;
+			vol /= 64.0f*64.0f*64.0f*64.0f*128.0f*64.0f*128.0f*1024.0f*512.0f;
+			achn->lramp_f = vol;
 			
-			achn->lramp = vol;
-			
-			int32_t rampmul = zlramp;
-			int32_t ramprem = ramplen;
-			int32_t rampdelta = (vol-zlramp);
-			int negdepth = (rampdelta < 0);
-			int32_t rampdelta_i = rampdelta;
-			if(negdepth)
-				rampdelta = -rampdelta;
-			int32_t rampspd = (rampdelta+0x0080)&~0x00FF;
-			
-			rampspd = rampspd / (ramplen+1);
-			
-			rampspd &= ~3;
-			
-			if(negdepth)
-			{
-				rampspd = -rampspd;
-				//rampspd -= 4;
-			}
-			
-			/*
-			if(rampdelta != 0)
-				printf("%5i %04X / %5i %04X mod90 is %5i => %5i \n", vol, vol
-					, rampdelta
-					, rampdelta_i&0xFFFF
-					, (rampdelta_i+(ramplen+1)*0x10000) % (ramplen+1)
-					, rampspd);
-			*/
-			
-			/*
-			Ramp speeds:
-			06BF NOT 16
-			0B40 = 32
-			0CC0 = 36
-			0F00 = 40
-			1200 = 48
-			1800 = 68
-			1E00 = 84
-			1ED8 NOT 84 (it's 88!)
-			27C0 = 112
-			3000 = 136
-			
-			D000 = -136
-			E800 NOT -68
-			EE00 = -48
-			F400 = -32
-			F4C0 (?) -28
-			FA00 (?) -16
-			*/
-			
-			//printf("%i\n", rampspd);
+			// TODO: get ramping working correctly
 			for(j = 0; j < len; j++) {
 #ifdef MIXER_INTERP_LINEAR
 				// get sample value
-				int32_t v0 = zdata[zoffs];
-				int32_t v1 = ((zoffs+1) == zlength
+				float v0 = zdata[zoffs];
+				float v1 = ((zoffs+1) == zlength
 					? (zflg & IT_SMP_LOOP
 						? zdata[zlpbeg]
 						: 0)
 					: zdata[(zoffs+1)]);
-				int32_t v  = ((v0*((65535-zsuboffs)))>>16)
-					+ ((v1*(zsuboffs))>>16);
+				float v  = ((v0*(65535-zsuboffs))
+					+ (v1*(zsuboffs)))/32768.0f/65536.0f;
 #else
-				int32_t v = zdata[zoffs];
+#ifdef MIXER_INTERP_CUBIC
+				// get sample value
+				// TODO: do this more efficiently / correctly
+				float v0 = (zoffs-1 < 0 ? 0.0f : zdata[zoffs-1]);
+				float v1 = zdata[zoffs];
+				float v2 = ((zoffs+1) == zlength
+					? (zflg & IT_SMP_LOOP
+						? zdata[zlpbeg]
+						: 0)
+					: zdata[(zoffs+1)]);
+				float v3 = ((zoffs+2) == zlength
+					? (zflg & IT_SMP_LOOP
+						? zdata[zlpbeg+1]
+						: 0)
+					: zdata[(zoffs+2)]);
+
+				// Reference: http://paulbourke.net/miscellaneous/interpolation/
+				float t = zsuboffs/65536.0f;
+				float t2 = t*t;
+				float t3 = t2*t;
+
+				float a0 = v3 - v2 - v0 + v1;
+				float a1 = v0 - v1 - a0;
+				float a2 = v2 - v0;
+				float a3 = v1;
+
+				float v = t3*a0 + t2*a1 + t*a2 + a3;
+				v /= 32768.0f;
+#else
+				float v = zdata[zoffs]/32768.0f;
 #endif
-				
-				if(ramprem > 0)
-				{
-					v = (v*rampmul+0x8000)>>16;
-					rampmul += rampspd;
-					ramprem--;
-				} else {
-					v = ((v*vol+0x8000)>>16);
-				}
-				
+#endif
+				if(j < ramplen)
+					v *= zlramp + (vol-zlramp)*(j/(float)ramplen);
+				else
+					v *= vol;
+
 				// mix
 #ifdef MIXER_STEREO
-				mixbuf[j*2] += v*vl>>8;
-				mixbuf[j*2+1] += v*vr>>8;
+				mixbuf[j*2] += v*vl;
+				mixbuf[j*2+1] += v*vr;
 #else
 				mixbuf[j] += v;
 #endif
-#ifdef MIXER_ANTICLICK
 #ifdef MIXER_STEREO
-				achn->anticlick[0] = v*vl>>8;
-				achn->anticlick[1] = v*vr>>8;
+				achn->anticlick_f[0] = v*vl;
+				achn->anticlick_f[1] = v*vr;
 #else
-				achn->anticlick[0] = v;
-#endif
+				achn->anticlick_f[0] = v;
 #endif
 				
 				// update
@@ -344,7 +271,7 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 	for(j = 0; j < len; j++)
 #endif
 	{
-		int32_t bv = -mixbuf[j];
+		int32_t bv = -mixbuf[j]*32768.0f;
 		if(bv < -32768) bv = -32768;
 		else if(bv > 32767) bv = 32767;
 		

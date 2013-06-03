@@ -37,6 +37,12 @@ void sackit_playback_mixstuff_it212(sackit_playback_t *sackit, int offs, int len
 void sackit_playback_mixstuff_it212s(sackit_playback_t *sackit, int offs, int len);
 void sackit_playback_mixstuff_it212l(sackit_playback_t *sackit, int offs, int len);
 void sackit_playback_mixstuff_it212ls(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214s(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214l(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214ls(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214c(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214cs(sackit_playback_t *sackit, int offs, int len);
 
 // objects.c
 void sackit_playback_reset_achn(sackit_achannel_t *achn);

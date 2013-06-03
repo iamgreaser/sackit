@@ -10,8 +10,10 @@ It currently targets IT v2.11 for a few reasons:
     For 44kHz, 2.11 uses 89 samples, while 2.12 uses 111 samples.
     This appears to be 1/500 of a second for 2.11 and 1/400 for 2.12.
 - IT v2.13 uses logarithmic vol ramping and quadratic interp.
+  - I didn't really notice much difference with gm-pants.it.
 - IT v2.14 COMPLETELY SCREWS EVERYTHING OVER,
     as it switches to a cubic-spline *FLOATING-POINT* mixer.
+  - It also appears to double the volume.
 - IT v2.14 patch 3 does LOTS OF THINGS:
   - Hey guys, I'm a resonant filter!
     - Not much of an issue as I've seen the actual ASM source code Jeff released,
