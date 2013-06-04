@@ -137,6 +137,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	int flag_done_instrument = 0;
 	int flag_nna_set = -1;
 	int flag_s7x = -1;
+
+	int can_set_cut = 1;
+	int can_set_res = 1;
 	
 	uint32_t new_sample_offset = 0;
 	
@@ -470,10 +473,14 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				pchn->filt_cut = efp;
 				if(pchn->achn != NULL)
 					pchn->achn->filt_cut = pchn->filt_cut;
+
+				can_set_cut = 0;
 			} else if(efp <= 0x8F) {
 				pchn->filt_res = (efp-0x80)*0x08;
 				if(pchn->achn != NULL)
 					pchn->achn->filt_res = pchn->filt_res;
+
+				can_set_res = 0;
 			}
 			break;
 	}
@@ -634,14 +641,14 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				if(note <= 119)
 					vnote = cins->notesample[xnote][0];
 
-				if(cins->ifc & 0x80)
+				if((cins->ifc & 0x80) != 0 && can_set_cut)
 				{
 					pchn->filt_cut = (cins->ifc & 0x7F);
 					if(pchn->achn != NULL)
 						pchn->achn->filt_cut = pchn->filt_cut;
 				}
 
-				if(cins->ifr & 0x80)
+				if((cins->ifr & 0x80) != 0 && can_set_res)
 				{
 					pchn->filt_res = (cins->ifr & 0x7F);
 					if(pchn->achn != NULL)
