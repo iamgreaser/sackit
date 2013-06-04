@@ -4,9 +4,18 @@ void sackit_filter_calc(sackit_playback_t *sackit, sackit_achannel_t *achn)
 {
 	int cut = achn->filt_cut<<8;
 	if(achn->instrument != NULL && (achn->instrument->epitch.flg & IT_ENV_FILTER) != 0 && (achn->instrument->epitch.flg & IT_ENV_ON) != 0)
+		cut = (cut*(achn->epitch.y+8192))>>14;
+
+	if(cut < 0)
 	{
-		cut = (cut*(achn->epitch.y+32))>>13;
+		printf("ERROR: cutoff should NOT be negative! (%i)\n", cut);
+		fflush(stdout);
+		abort();
 	}
+
+	//if(cut != 127*256)
+	//	printf("%i\n", cut);
+
 	int res = achn->filt_res;
 
 	if(cut == 127*256 && res == 0)
