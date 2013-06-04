@@ -391,6 +391,10 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 
 	achn->filt_cut = 127;
 	achn->filt_res = 0;
+	achn->filt_prev[0][0] = 0.0f;
+	achn->filt_prev[0][1] = 0.0f;
+	achn->filt_prev[1][0] = 0.0f;
+	achn->filt_prev[1][1] = 0.0f;
 	
 	achn->next = achn->prev = NULL;
 	achn->parent = NULL;
