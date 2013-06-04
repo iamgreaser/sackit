@@ -1,5 +1,39 @@
 #include "sackit_internal.h"
 
+void sackit_filter_calc(sackit_playback_t *sackit, sackit_achannel_t *achn)
+{
+	int cut = achn->filt_cut<<8;
+	if(achn->instrument != NULL && (achn->instrument->epitch.flg & IT_ENV_FILTER) != 0 && (achn->instrument->epitch.flg & IT_ENV_ON) != 0)
+	{
+		cut = (cut*(achn->epitch.y+32))>>13;
+	}
+	int res = achn->filt_res;
+
+	if(cut == 127*256 && res == 0)
+	{
+		achn->filt_coeff[0] = 1;
+		achn->filt_coeff[1] = 0;
+		achn->filt_coeff[2] = 0;
+		return;
+	}
+
+	float r = pow(2.0, cut * -0.00016276040696538985) * 0.0012166619999334216 * 44100;
+	float d2 = quality_factor_table[res]*2.0;
+	//printf("%.9f %.9f\n", r, d2);
+	
+	float d = d2 * (r + 1.0f) - 1.0f;
+	float e = r*r;
+
+	float a = 1.0f / (1.0f + d + e);
+	float b = (d + 2.0f*e) * a;
+	float c = -e * a;
+
+	achn->filt_coeff[0] = a;
+	achn->filt_coeff[1] = b;
+	achn->filt_coeff[2] = c;
+	//printf("filt %f %f %f | %i %i\n", a,b,c, cut, res);
+}
+
 void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int offs)
 {
 	sackit_nna_allocate(sackit, pchn);
@@ -13,6 +47,8 @@ void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int 
 	pchn->achn->offs = offs;
 	pchn->achn->suboffs = 0;
 	pchn->achn->cv = pchn->cv;
+	pchn->achn->filt_cut = pchn->filt_cut;
+	pchn->achn->filt_res = pchn->filt_res;
 	if(pchn->instrument != NULL)
 		pchn->achn->iv = pchn->instrument->gbv;
 	if(pchn->sample != NULL)
@@ -426,6 +462,20 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			if(pchn->achn != NULL)
 				pchn->achn->pan = pchn->pan;
 			break;
+
+		case 0x1A: // Zxx - (MIDI)
+			// TODO: load MIDI data from the file itself
+			if(efp <= 0x7F)
+			{
+				pchn->filt_cut = efp;
+				if(pchn->achn != NULL)
+					pchn->achn->filt_cut = pchn->filt_cut;
+			} else if(efp <= 0x8F) {
+				pchn->filt_res = (efp-0x80)*0x08;
+				if(pchn->achn != NULL)
+					pchn->achn->filt_res = pchn->filt_res;
+			}
+			break;
 	}
 	
 	switch(eft)
@@ -583,6 +633,20 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				
 				if(note <= 119)
 					vnote = cins->notesample[xnote][0];
+
+				if(cins->ifc & 0x80)
+				{
+					pchn->filt_cut = (cins->ifc & 0x7F);
+					if(pchn->achn != NULL)
+						pchn->achn->filt_cut = pchn->filt_cut;
+				}
+
+				if(cins->ifr & 0x80)
+				{
+					pchn->filt_res = (cins->ifr & 0x7F);
+					if(pchn->achn != NULL)
+						pchn->achn->filt_res = pchn->filt_res;
+				}
 				
 				flag_done_instrument = 1;
 			}

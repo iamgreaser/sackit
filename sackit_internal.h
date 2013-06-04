@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include <math.h>
+
 #include "sackit.h"
 
 // effects.c
@@ -43,6 +45,12 @@ void sackit_playback_mixstuff_it214l(sackit_playback_t *sackit, int offs, int le
 void sackit_playback_mixstuff_it214ls(sackit_playback_t *sackit, int offs, int len);
 void sackit_playback_mixstuff_it214c(sackit_playback_t *sackit, int offs, int len);
 void sackit_playback_mixstuff_it214cs(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214f(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214fs(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214fl(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214fls(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214fc(sackit_playback_t *sackit, int offs, int len);
+void sackit_playback_mixstuff_it214fcs(sackit_playback_t *sackit, int offs, int len);
 
 // objects.c
 void sackit_playback_reset_achn(sackit_achannel_t *achn);
@@ -50,6 +58,7 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn);
 
 // playroutine.c
 extern int itmixer_bytes[];
+void sackit_filter_calc(sackit_playback_t *sackit, sackit_achannel_t *achn);
 void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int offs);
 void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pchn,
 	uint8_t note, uint8_t ins, uint8_t vol, uint8_t eft, uint8_t efp);
@@ -72,4 +81,5 @@ extern uint16_t linear_slide_up_table[];
 extern uint16_t fine_linear_slide_down_table[];
 extern uint16_t linear_slide_down_table[];
 extern uint8_t slide_table[];
+extern float quality_factor_table[];
 

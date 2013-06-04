@@ -30,24 +30,24 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 #ifdef MIXER_STEREO
 	if(sackit->anticlick_f[0] != 0 || sackit->anticlick_f[1] != 0)
 	{
-		int32_t rampmul0 = sackit->anticlick_f[0];
-		int32_t rampmul1 = sackit->anticlick_f[1];
+		float rampmul0 = sackit->anticlick_f[0];
+		float rampmul1 = sackit->anticlick_f[1];
 		sackit->anticlick_f[0] = 0.0f;
 		sackit->anticlick_f[1] = 0.0f;
 #else
 	if(sackit->anticlick_f[0] != 0.0f)
 	{
-		int32_t rampmul = sackit->anticlick_f[0];
+		float rampmul = sackit->anticlick_f[0];
 		sackit->anticlick_f[0] = 0.0f;
 #endif
 		
 		for(j = 0; j < ramplen; j++)
 		{
 #ifdef MIXER_STEREO
-			mixbuf[j*2] += (((int32_t)rampmul0)*(int32_t)(ramplen-j-1))/ramplen;
-			mixbuf[j*2+1] += (((int32_t)rampmul1)*(int32_t)(ramplen-j-1))/ramplen;
+			mixbuf[j*2] += (((float)rampmul0)*(float)(ramplen-j-1))/ramplen;
+			mixbuf[j*2+1] += (((float)rampmul1)*(float)(ramplen-j-1))/ramplen;
 #else
-			mixbuf[j] += (((int32_t)rampmul)*(int32_t)(ramplen-j-1))/ramplen;
+			mixbuf[j] += (((float)rampmul)*(float)(ramplen-j-1))/ramplen;
 #endif
 		}
 	}
@@ -55,6 +55,22 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 	for(i = 0; i < sackit->achn_count; i++)
 	{
 		sackit_achannel_t *achn = &(sackit->achn[i]);
+		
+#ifdef MIXER_FILTERED
+		sackit_filter_calc(sackit, achn);
+		float fa = achn->filt_coeff[0];
+		float fb = achn->filt_coeff[1];
+		float fc = achn->filt_coeff[2];
+#ifdef MIXER_STEREO
+		float k0l = achn->filt_prev[0][0];
+		float k0r = achn->filt_prev[1][0];
+		float k1l = achn->filt_prev[0][1];
+		float k1r = achn->filt_prev[1][1];
+#else
+		float k0 = achn->filt_prev[0][0];
+		float k1 = achn->filt_prev[0][1];
+#endif
+#endif
 		
 		if(achn->sample == NULL || achn->sample->data == NULL
 			|| achn->offs >= (int32_t)achn->sample->length
@@ -203,17 +219,45 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 					v *= vol;
 
 				// mix
+#ifdef MIXER_FILTERED
+#ifdef MIXER_STEREO
+				float vxl = v*vl*fa + k0l*fb + k1l*fc;
+				float vxr = v*vr*fa + k0r*fb + k1r*fc;
+				if(vxl < -2.0f) vxl = -2.0f; else if(vxl > 2.0f) vxl = 2.0f;
+				if(vxr < -2.0f) vxr = -2.0f; else if(vxr > 2.0f) vxr = 2.0f;
+				if(k0l < -2.0f) k0l = -2.0f; else if(k0l > 2.0f) k0l = 2.0f;
+				if(k0r < -2.0f) k0r = -2.0f; else if(k0r > 2.0f) k0r = 2.0f;
+				if(k1l < -2.0f) k1l = -2.0f; else if(k1l > 2.0f) k1l = 2.0f;
+				if(k1r < -2.0f) k1r = -2.0f; else if(k1r > 2.0f) k1r = 2.0f;
+				k1l = k0l;
+				k1r = k0r;
+				k0l = vxl;
+				k0r = vxr;
+
+				mixbuf[j*2] += vxl;
+				mixbuf[j*2+1] += vxr;
+				achn->anticlick_f[0] = vxl;
+				achn->anticlick_f[1] = vxr;
+#else
+				float vx = v*fa + k0*fb + k1*fc;
+				if(vx < -2.0f) vx = -2.0f; else if(vx > 2.0f) vx = 2.0f;
+				if(k0 < -2.0f) k0 = -2.0f; else if(k0 > 2.0f) k0 = 2.0f;
+				if(k1 < -2.0f) k1 = -2.0f; else if(k1 > 2.0f) k1 = 2.0f;
+				k1 = k0;
+				k0 = vx;
+				mixbuf[j] += vx;
+				achn->anticlick_f[0] = vx;
+#endif
+#else
 #ifdef MIXER_STEREO
 				mixbuf[j*2] += v*vl;
 				mixbuf[j*2+1] += v*vr;
-#else
-				mixbuf[j] += v;
-#endif
-#ifdef MIXER_STEREO
 				achn->anticlick_f[0] = v*vl;
 				achn->anticlick_f[1] = v*vr;
 #else
+				mixbuf[j] += v;
 				achn->anticlick_f[0] = v;
+#endif
 #endif
 				
 				// update
@@ -259,6 +303,17 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 			
 			achn->offs = zoffs;
 			achn->suboffs = zsuboffs;
+#ifdef MIXER_FILTERED
+#ifdef MIXER_STEREO
+			achn->filt_prev[0][0] = k0l;
+			achn->filt_prev[1][0] = k0r;
+			achn->filt_prev[0][1] = k1l;
+			achn->filt_prev[1][1] = k1r;
+#else
+			achn->filt_prev[0][0] = k0;
+			achn->filt_prev[0][1] = k1;
+#endif
+#endif
 		} else if(achn->flags & SACKIT_ACHN_PLAYING) {
 			// TODO: update offs/suboffs
 		}

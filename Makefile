@@ -4,7 +4,7 @@ RANLIB = ranlib
 APPSUFFIX =
 
 CFLAGS = -g -fPIC -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
-LDFLAGS = -g -fPIC
+LDFLAGS = -g -fPIC -lm
 
 SDL_CFLAGS = `sdl-config --cflags`
 SDL_LDFLAGS = `sdl-config --libs`
@@ -15,7 +15,7 @@ LDFLAGS_PLAY = -g -lm $(SDL_LDFLAGS)
 CFLAGS_SFX = -g $(SDL_CFLAGS)
 LDFLAGS_SFX = -g -lm $(SDL_LDFLAGS)
 CFLAGS_CONVERT = -g
-LDFLAGS_CONVERT = -g
+LDFLAGS_CONVERT = -g -lm
 
 INCLUDES = sackit_internal.h sackit.h
 

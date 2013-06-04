@@ -27,6 +27,13 @@ enum {
 	MIXER_IT214LS,
 	MIXER_IT214C,
 	MIXER_IT214CS,
+
+	MIXER_IT214F,
+	MIXER_IT214FS,
+	MIXER_IT214FL,
+	MIXER_IT214FLS,
+	MIXER_IT214FC,
+	MIXER_IT214FCS,
 };
 
 typedef struct it_pattern
@@ -185,6 +192,11 @@ struct sackit_achannel
 	float lramp_f;
 	int16_t fadeout;
 
+	int filt_cut;
+	int filt_res;
+	float filt_prev[2][2];
+	float filt_coeff[3];
+
 	int32_t anticlick[2];
 	float anticlick_f[2];
 	
@@ -266,6 +278,9 @@ struct sackit_pchannel
 	uint8_t eff_tempo;
 	uint8_t eff_tremor;
 	uint8_t eff_retrig;
+
+	int filt_cut;
+	int filt_res;
 	
 	it_instrument_t *instrument;
 	it_sample_t *sample;

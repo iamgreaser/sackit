@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 		fclose(fp);
 	}
 	
-	sackit_playback_t *sackit = sackit_playback_new(module, BUFLEN, 256, MIXER_IT214C);
+	sackit_playback_t *sackit = sackit_playback_new(module, BUFLEN, 256, MIXER_IT214FC);
 	
 	SDL_AudioSpec aspec;
 	aspec.freq = 44100;

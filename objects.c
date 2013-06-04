@@ -388,6 +388,9 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->lramp = 0;
 	
 	achn->fadeout = 1024;
+
+	achn->filt_cut = 127;
+	achn->filt_res = 0;
 	
 	achn->next = achn->prev = NULL;
 	achn->parent = NULL;
@@ -456,6 +459,9 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->eff_tempo = 0;
 	pchn->eff_tremor = 0x11;
 	pchn->eff_retrig = 0x00;
+
+	pchn->filt_cut = 127;
+	pchn->filt_res = 0;
 	
 	pchn->instrument = NULL;
 	pchn->sample = NULL;

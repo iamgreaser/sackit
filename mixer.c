@@ -76,6 +76,7 @@
 #undef MIXER_VER
 
 // IT214 mixer, interpolated linearly
+#define MIXER_FILTERED
 #define MIXER_NAME sackit_playback_mixstuff_it214l
 #define MIXER_VER 214
 #define MIXER_ANTICLICK
@@ -108,4 +109,54 @@
 #undef MIXER_ANTICLICK
 #undef MIXER_VER
 #undef MIXER_INTERP_CUBIC
+
+// IT214p3 mixer: resonant filter mixer
+#define MIXER_NAME sackit_playback_mixstuff_it214f
+#define MIXER_VER 214
+#define MIXER_ANTICLICK
+#include "mixer_float.h"
+#undef MIXER_NAME
+
+#define MIXER_NAME sackit_playback_mixstuff_it214fs
+#define MIXER_STEREO
+#include "mixer_float.h"
+#undef MIXER_STEREO
+#undef MIXER_NAME
+#undef MIXER_ANTICLICK
+#undef MIXER_VER
+
+// IT214p3 mixer, interpolated linearly
+#define MIXER_NAME sackit_playback_mixstuff_it214fl
+#define MIXER_VER 214
+#define MIXER_ANTICLICK
+#define MIXER_INTERP_LINEAR
+#include "mixer_float.h"
+#undef MIXER_NAME
+
+#define MIXER_NAME sackit_playback_mixstuff_it214fls
+#define MIXER_STEREO
+#include "mixer_float.h"
+#undef MIXER_STEREO
+#undef MIXER_NAME
+#undef MIXER_ANTICLICK
+#undef MIXER_VER
+#undef MIXER_INTERP_LINEAR
+
+// IT214p3 mixer, interpolated cubically
+#define MIXER_NAME sackit_playback_mixstuff_it214fc
+#define MIXER_VER 214
+#define MIXER_ANTICLICK
+#define MIXER_INTERP_CUBIC
+#include "mixer_float.h"
+#undef MIXER_NAME
+
+#define MIXER_NAME sackit_playback_mixstuff_it214fcs
+#define MIXER_STEREO
+#include "mixer_float.h"
+#undef MIXER_STEREO
+#undef MIXER_NAME
+#undef MIXER_ANTICLICK
+#undef MIXER_VER
+#undef MIXER_INTERP_CUBIC
+#undef MIXER_FILTERED
 
