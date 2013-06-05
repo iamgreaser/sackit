@@ -764,7 +764,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			}
 
 			// TODO: handle carry correctly in this case (it's weird)
-			if(pchn->achn != NULL && (sackit->module->header.flags & IT_MOD_COMPGXX) != 0)
+			if(flag_slide_porta && pchn->achn != NULL && (sackit->module->header.flags & IT_MOD_COMPGXX) != 0)
 			{
 				if(pchn->instrument == NULL || (pchn->instrument->evol.flg & IT_ENV_CARRY) == 0)
 				{
