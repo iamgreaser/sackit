@@ -56,6 +56,7 @@ void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int 
 	pchn->achn->freq = pchn->freq;
 	pchn->achn->offs = offs;
 	pchn->achn->suboffs = 0;
+	pchn->achn->suboffs_f = 0.0;
 	pchn->achn->cv = pchn->cv;
 	pchn->achn->filt_cut = pchn->filt_cut;
 	pchn->achn->filt_res = pchn->filt_res;

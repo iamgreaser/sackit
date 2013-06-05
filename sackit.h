@@ -74,8 +74,9 @@ typedef struct it_sample
 #define IT_ENV_SUSLOOP  0x04
 #define IT_ENV_CARRY    0x08
 #define IT_ENV_FILTER   0x80
-// TODO: confirm which bit ENV_CARRY *really* uses
+// toDONE: confirm which bit ENV_CARRY *really* uses
 // (it's not in ITTECH - dammit Jeff...)
+// - yes, it IS that flag. Apparently it was added in IT 2.14p5 or MAYBE p4 (it's not in p3!).
 
 typedef struct it_envelope
 {
@@ -184,6 +185,7 @@ struct sackit_achannel
 	int32_t freq;
 	int32_t offs;
 	int32_t suboffs;
+	float suboffs_f;
 	uint16_t flags;
 	uint8_t vol,sv,iv,cv; // TODO: more stuff
 	uint8_t pan;

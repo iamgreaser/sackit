@@ -360,6 +360,7 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn)
 	achn->ofreq = 0;
 	achn->offs = 0;
 	achn->suboffs = 0;
+	achn->suboffs_f = 0.0f;
 	
 	achn->flags = 0;
 	

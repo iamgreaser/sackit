@@ -127,13 +127,21 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 #endif
 
 			int32_t zoffs = achn->offs;
-			int32_t zsuboffs = achn->suboffs;
-			int32_t zfreq = achn->ofreq;
+			float zsuboffs = achn->suboffs_f;
 			float zlramp = achn->lramp_f;
 			
-			zfreq = sackit_div_int_32_32_to_fixed_16(zfreq,tfreq);
+#if 1
+			// I suspect THIS one is more accurate with regards to IT itself.
+			int32_t zfreqi = achn->ofreq;
+			zfreqi = sackit_div_int_32_32_to_fixed_16(zfreqi,tfreq);
+			float zfreq = zfreqi/65536.0f;
+#else
+			// This thing, of course, is more accurate with regards to maths.
+			float zfreq = achn->ofreq;
+			zfreq = ((double)zfreq)/((double)tfreq);
+#endif
 			
-			//printf("freq %i %i %i\n", zfreq, zoffs, zsuboffs);
+			//printf("freq %i %i %f\n", zfreq, zoffs, zsuboffs);
 			
 			int32_t zlpbeg = achn->sample->loop_begin;
 			int32_t zlpend = achn->sample->loop_end;
@@ -170,49 +178,76 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 			
 			// TODO: get ramping working correctly
 			for(j = 0; j < len; j++) {
+				float v;
+				// frozensun.it suggests this exception does NOT exist in IT.
+				// Of course, interpolation sucks ass, so that's why most of the apps default to noninterpolated.
+				if(0) // zfreq >= 1.0f)
+				{
+					v = zdata[zoffs];
+				} else {
 #ifdef MIXER_INTERP_LINEAR
-				// get sample value
-				float v0 = zdata[zoffs];
-				float v1 = ((zoffs+1) == zlength
-					? (zflg & IT_SMP_LOOP
-						? zdata[zlpbeg]
-						: 0)
-					: zdata[(zoffs+1)]);
-				float v  = ((v0*(65535-zsuboffs))
-					+ (v1*(zsuboffs)))/32768.0f/65536.0f;
+					// get sample value
+					float v0 = zdata[zoffs];
+					float v1 = ((zoffs+1) == zlength
+						? (zflg & IT_SMP_LOOP
+							? zdata[zlpbeg]
+							: 0)
+						: zdata[(zoffs+1)]);
+					v  = ((v0*(1.0-zsuboffs))
+						+ (v1*(zsuboffs)))/32768.0f;
 #else
 #ifdef MIXER_INTERP_CUBIC
-				// get sample value
-				// TODO: do this more efficiently / correctly
-				float v0 = (zoffs-1 < 0 ? 0.0f : zdata[zoffs-1]);
-				float v1 = zdata[zoffs];
-				float v2 = ((zoffs+1) == zlength
-					? (zflg & IT_SMP_LOOP
-						? zdata[zlpbeg]
-						: 0)
-					: zdata[(zoffs+1)]);
-				float v3 = ((zoffs+2) == zlength
-					? (zflg & IT_SMP_LOOP
-						? zdata[zlpbeg+1]
-						: 0)
-					: zdata[(zoffs+2)]);
+					// get sample value
+					// TODO: do this more efficiently / correctly
+					float v0 = (zoffs-1 < 0 ? 0.0f : zdata[zoffs-1]);
+					float v1 = zdata[zoffs];
+					float v2 = ((zoffs+1) == zlength
+						? (zflg & IT_SMP_LOOP
+							? zdata[zlpbeg]
+							: 0)
+						: zdata[(zoffs+1)]);
+					float v3 = ((zoffs+2) == zlength
+						? (zflg & IT_SMP_LOOP
+							? zdata[zlpbeg+1]
+							: 0)
+						: zdata[(zoffs+2)]);
 
-				// Reference: http://paulbourke.net/miscellaneous/interpolation/
-				float t = zsuboffs/65536.0f;
-				float t2 = t*t;
-				float t3 = t2*t;
+					// Reference: http://paulbourke.net/miscellaneous/interpolation/
+					float t = zsuboffs;
+					float t2 = t*t;
+					float t3 = t2*t;
 
-				float a0 = v3 - v2 - v0 + v1;
-				float a1 = v0 - v1 - a0;
-				float a2 = v2 - v0;
-				float a3 = v1;
+#if 1
+					// using a Hermite spline
+					const float bias = 0.0f;
+					const float tension = 0.0f;
 
-				float v = t3*a0 + t2*a1 + t*a2 + a3;
-				v /= 32768.0f;
+					float m0 = (v1 - v0)*(1.0 + bias)*(1.0 - tension)/2.0
+					+          (v2 - v1)*(1.0 - bias)*(1.0 - tension)/2.0;
+					float m1 = (v2 - v1)*(1.0 + bias)*(1.0 - tension)/2.0
+					+          (v3 - v2)*(1.0 - bias)*(1.0 - tension)/2.0;
+					float a0 = 2.0*t3 - 3.0*t2 + 1;
+					float a1 = t3 - 2.0*t2 + t;
+					float a2 = t3 - t2;
+					float a3 = -2.0*t3 + 3.0*t2;
+
+					v = a0*v1 + a1*m0 + a2*m1 + a3*v2;
 #else
-				float v = zdata[zoffs]/32768.0f;
+					// using a cubic spline
+					float a0 =  v3 - v2 + v1 - v0;
+					float a1 = -v1 + v0 - a0;
+					float a2 =  v2 - v0;
+					float a3 =  v1;
+
+					v = a0*t3 + a1*t2 + a2*t + a3;
+
+#endif
+#else
+					v = zdata[zoffs];
 #endif
 #endif
+				}
+				v /= 32768.0f;
 				if(j < ramplen)
 					v *= zlramp + (vol-zlramp)*(j/(float)ramplen);
 				else
@@ -262,8 +297,9 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 				
 				// update
 				zsuboffs += zfreq;
-				zoffs += (((int32_t)zsuboffs)>>16);
-				zsuboffs &= 0xFFFF;
+				int32_t zsuboffs_int = (int32_t)zsuboffs;
+				zoffs += zsuboffs_int;
+				zsuboffs -= zsuboffs_int;
 				
 				if((zfreq < 0
 					? zoffs < zlpbeg
@@ -279,12 +315,12 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 							{
 								zoffs = zlpend*2-1-zoffs;
 								zfreq = -zfreq;
-								zsuboffs = 0x10000-zsuboffs;
+								zsuboffs = 1.0-zsuboffs;
 								achn->flags |= SACKIT_ACHN_REVERSE;
 							} else {
 								zoffs = zlpbeg*2-zoffs;
 								zfreq = -zfreq;
-								zsuboffs = 0x10000-zsuboffs;
+								zsuboffs = 1.0-zsuboffs;
 								achn->flags &= ~SACKIT_ACHN_REVERSE;
 							}
 						} else {
@@ -302,7 +338,7 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 			}
 			
 			achn->offs = zoffs;
-			achn->suboffs = zsuboffs;
+			achn->suboffs_f = zsuboffs;
 #ifdef MIXER_FILTERED
 #ifdef MIXER_STEREO
 			achn->filt_prev[0][0] = k0l;
