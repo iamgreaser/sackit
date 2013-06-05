@@ -13,7 +13,7 @@ IT 2.14p5 is what we're targetting right now.
   - I didn't really notice much difference with gm-pants.it.
 - IT v2.14 COMPLETELY SCREWS EVERYTHING OVER,
     as it switches to a cubic-spline *FLOATING-POINT* mixer.
-  - It also appears to double the volume.
+  - It also appears to double the volume in mono mode to match stereo mode volumes.
 - IT v2.14 patch 3 does LOTS OF THINGS:
   - Hey guys, I'm a resonant filter!
     - Not much of an issue as I've seen the actual ASM source code Jeff released,
@@ -42,10 +42,10 @@ So, the status of things, which is probably out of date:
 - Sanity checks are lacking - it's pretty easy to crash it.
 - Not many effects are implemented.
 - Instruments are finally supported, though envelopes need work wrt sample-accuracy.
-  - NNAs are in place. DCAs are, too.
+  - NNAs are in place. DCAs are, too, althought they need work.
   - Will abort() if you exhaust all 256 virtual channels at the moment.
 - RESONANT FILTERS YAAAAAAAAY
-- Carry flag is somewhat implemented, with some Compat Gxx mode retrig happening.
+- Envelope carry flag is somewhat implemented, with some Compat Gxx mode retrig happening.
 
 If you'd like to test this,
 - see if you can get ImpulseTracker 2.14p5 from somewhere (it214v5.zip)
