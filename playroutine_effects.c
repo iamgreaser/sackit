@@ -45,6 +45,7 @@ void sackit_filter_calc(sackit_playback_t *sackit, sackit_achannel_t *achn)
 
 void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int offs)
 {
+	sackit_achannel_t *lachn = pchn->achn;
 	sackit_nna_allocate(sackit, pchn);
 	
 	pchn->achn->instrument = pchn->instrument;
@@ -81,12 +82,34 @@ void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int 
 		|SACKIT_ACHN_RAMP
 		|SACKIT_ACHN_SUSTAIN);
 	
-	pchn->achn->evol.x = 0;
-	pchn->achn->epan.x = 0;
-	pchn->achn->epitch.x = 0;
-	pchn->achn->evol.idx = 0;
-	pchn->achn->epan.idx = 0;
-	pchn->achn->epitch.idx = 0;
+	if(pchn->achn != lachn && lachn != NULL)
+	{
+		if(pchn->achn->instrument == lachn->instrument)
+		{
+			pchn->achn->evol.x = lachn->evol.x;
+			pchn->achn->evol.idx = lachn->evol.idx;
+			pchn->achn->epan.x = lachn->epan.x;
+			pchn->achn->epan.idx = lachn->epan.idx;
+			pchn->achn->epitch.x = lachn->epitch.x;
+			pchn->achn->epitch.idx = lachn->epitch.idx;
+		}
+	}
+	
+	if(pchn->instrument == NULL || (pchn->instrument->evol.flg & IT_ENV_CARRY) == 0)
+	{
+		pchn->achn->evol.x = 0;
+		pchn->achn->evol.idx = 0;
+	}
+	if(pchn->instrument == NULL || (pchn->instrument->epan.flg & IT_ENV_CARRY) == 0)
+	{
+		pchn->achn->epan.idx = 0;
+		pchn->achn->epan.x = 0;
+	}
+	if(pchn->instrument == NULL || (pchn->instrument->epitch.flg & IT_ENV_CARRY) == 0)
+	{
+		pchn->achn->epitch.x = 0;
+		pchn->achn->epitch.idx = 0;
+	}
 	
 	if(pchn->instrument != NULL)
 	{
@@ -733,11 +756,30 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			pchn->tfreq = nfreq;
 			pchn->note = note;
 			
-			// TODO: compat Gxx
 			if(pchn->achn == NULL || (!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) || !flag_slide_porta)
 			{
 				pchn->freq = pchn->nfreq = nfreq;
 				flag_retrig = 1;
+			}
+
+			// TODO: handle carry correctly in this case (it's weird)
+			if(pchn->achn != NULL && (sackit->module->header.flags & IT_MOD_COMPGXX) != 0)
+			{
+				if(pchn->instrument == NULL || (pchn->instrument->evol.flg & IT_ENV_CARRY) == 0)
+				{
+					pchn->achn->evol.x = 0;
+					pchn->achn->evol.idx = 0;
+				}
+				if(pchn->instrument == NULL || (pchn->instrument->epan.flg & IT_ENV_CARRY) == 0)
+				{
+					pchn->achn->epan.idx = 0;
+					pchn->achn->epan.x = 0;
+				}
+				if(pchn->instrument == NULL || (pchn->instrument->epitch.flg & IT_ENV_CARRY) == 0)
+				{
+					pchn->achn->epitch.x = 0;
+					pchn->achn->epitch.idx = 0;
+				}
 			}
 		}
 	} else if(note == 255) {

@@ -18,6 +18,10 @@ void sackit_nna_note_cut(sackit_playback_t *sackit, sackit_achannel_t *achn)
 	achn->anticlick[1] = 0;
 	achn->anticlick_f[0] = 0.0f;
 	achn->anticlick_f[1] = 0.0f;
+	achn->filt_prev[0][0] = 0.0f;
+	achn->filt_prev[0][1] = 0.0f;
+	achn->filt_prev[1][0] = 0.0f;
+	achn->filt_prev[1][1] = 0.0f;
 }
 
 void sackit_nna_note_off(sackit_playback_t *sackit, sackit_achannel_t *achn)
