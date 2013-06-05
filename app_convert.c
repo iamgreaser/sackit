@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	if(module == NULL)
 		return 1;
 	
-	sackit_playback_t *sackit = sackit_playback_new(module, 44100, 256, MIXER_IT212S);
+	sackit_playback_t *sackit = sackit_playback_new(module, 44100, 256, MIXER_IT214FS);
 
 	for(i = 0; i < maxlen; i++)
 	{

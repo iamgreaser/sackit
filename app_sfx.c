@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
 		for(x = 0; x < screen->w; x++)
 			pbuf[divpitch*y+x] = 0x00000000;
 	
-	sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT214FCS);
+	sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT214FS);
 	
 	SDL_AudioSpec aspec;
 	aspec.freq = 44100;
