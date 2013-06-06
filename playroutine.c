@@ -243,6 +243,9 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 				}
 			}
 		}
+		// biscuitworld.it exposes a weird quirk caused by modplug tracker sucking ass
+		if(aenv->x > ienv->points[aenv->idx].x)
+			aenv->x = ienv->points[aenv->idx].x+1;
 	}
 }
 
