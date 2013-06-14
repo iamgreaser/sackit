@@ -648,6 +648,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		// Hx
 	}
 	
+	it_sample_t *psmp = pchn->sample;
 	if(ins != 0)
 	{
 		if(sackit->module->header.flags & IT_MOD_INSTR)
@@ -659,7 +660,6 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				cins = pchn->instrument;
 			else
 				pchn->instrument = cins;
-			
 			
 			// TODO: confirm behaviour
 			if(cins != NULL)
@@ -727,6 +727,8 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	if(note <= 119)
 	{
 		// actual note
+		it_sample_t *csmp;
+
 		if(sackit->module->header.flags & IT_MOD_INSTR)
 		{
 			uint8_t xnote = note;
@@ -737,7 +739,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				// TODO: confirm behaviour
 				if(cins->notesample[xnote][1] != 0)
 				{
-					it_sample_t *csmp = sackit->module->samples[cins->notesample[xnote][1]-1];
+					csmp = sackit->module->samples[cins->notesample[xnote][1]-1];
 					if(csmp != NULL)
 						pchn->sample = csmp;
 				}
@@ -753,11 +755,13 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		//printf("N %i %i %i %i\n", note, vnote, ins, nfreq);
 		if(pchn->sample != NULL)
 		{
-			nfreq = sackit_mul_fixed_16_int_32(nfreq, pchn->sample->c5speed);
+			int flag_isnt_sliding = (pchn->achn == NULL || (!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) || !flag_slide_porta);
+			it_sample_t *nsmp = (psmp != NULL && (sackit->module->header.flags & IT_MOD_COMPGXX) && (!flag_isnt_sliding) ? pchn->achn->sample : pchn->sample);
+			nfreq = sackit_mul_fixed_16_int_32(nfreq, nsmp->c5speed);
 			pchn->tfreq = nfreq;
 			pchn->note = note;
 			
-			if(pchn->achn == NULL || (!(pchn->achn->flags & SACKIT_ACHN_PLAYING)) || !flag_slide_porta)
+			if(flag_isnt_sliding)
 			{
 				pchn->freq = pchn->nfreq = nfreq;
 				flag_retrig = 1;
@@ -818,8 +822,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 					it_sample_t *csmp = sackit->module->samples[cins->notesample[pchn->note][1]-1];
 					if(csmp == NULL)
 						csmp = pchn->sample;
-					else
+					else {
 						pchn->sample = csmp;
+					}
 					
 					if(csmp == NULL)
 						flag_retrig = 0;
