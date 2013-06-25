@@ -241,13 +241,54 @@ void sackit_nna_allocate(sackit_playback_t *sackit, sackit_pchannel_t *pchn)
 	
 	// Search through and find the channel of lowest volume that is in the
 	// 'background' (ie. no longer controlled directly)
-	
-	// TODO!
-	fprintf(stderr, "TODO: find background channel\n");
-	abort();
+	int tvol = 0xFFFFFF;
+	int ti = 0;
 	for(i = 0; i < sackit->achn_count; i++)
 	{
 		sackit_achannel_t *achn = &(sackit->achn[i]);
+		if(achn->parent != NULL && achn->parent->achn == achn)
+			continue; // foreground channel - SKIP THIS
+
+		int cvol = (int32_t)achn->sv;
+		cvol *= (int32_t)achn->iv;
+		cvol *= (int32_t)achn->vol;
+		cvol *= (int32_t)achn->cv;
+		cvol >>= 16;
+		cvol *= (int32_t)achn->evol.y;
+		cvol *= (int32_t)achn->fadeout;
+		
+		if(cvol < tvol)
+		{
+			tvol = cvol;
+			ti = i;
+		}
+	}
+
+	// There's our channel.
+	sackit_achannel_t *achn = &(sackit->achn[ti]);
+	if(achn->parent != NULL)
+	{
+		if(achn->parent->achn == achn)
+			achn->parent->achn = NULL;
+		if(achn->parent->bg_achn == achn)
+			achn->parent->bg_achn = achn->next;
 	}
 	
+	if(achn->prev != NULL)
+		achn->prev->next = achn->next;
+	if(achn->next != NULL)
+		achn->next->prev = achn->prev;
+	
+	if(old_achn == achn)
+		old_achn = achn->next;
+	pchn->bg_achn = old_achn;
+	sackit_playback_reset_achn(achn);
+	
+	pchn->achn = achn;
+	achn->parent = pchn;
+	
+	achn->prev = NULL;
+	achn->next = old_achn;
+	if(old_achn != NULL)
+		old_achn->prev = achn;
 }

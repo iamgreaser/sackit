@@ -802,7 +802,6 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 	{
 		if(!flag_done_instrument)
 		{
-			sackit_nna_allocate(sackit, pchn);
 			
 			// FIXME: this is messy! it shouldn't be duplicated twice!
 			if(sackit->module->header.flags & IT_MOD_INSTR)
@@ -840,6 +839,9 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 				if(csmp == NULL)
 					flag_retrig = 0;
 			}
+
+			if(!flag_retrig)
+				sackit_nna_allocate(sackit, pchn);
 		}
 		
 		if(flag_retrig)
