@@ -402,16 +402,16 @@ void sackit_effect_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, in
 					pchn->vol += 1;
 					break;
 				case 0xA:
-					pchn->vol += 1;
+					pchn->vol += 2;
 					break;
 				case 0xB:
-					pchn->vol += 1;
+					pchn->vol += 4;
 					break;
 				case 0xC:
-					pchn->vol += 1;
+					pchn->vol += 8;
 					break;
 				case 0xD:
-					pchn->vol += 1;
+					pchn->vol += 16;
 					break;
 				
 				case 0xE:
