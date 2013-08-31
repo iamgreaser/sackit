@@ -3,11 +3,13 @@ RANLIB = ranlib
 
 APPSUFFIX =
 
-CFLAGS = -g -fPIC -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
-LDFLAGS = -g -fPIC -lm
+OPTFLAGS =
 
-SDL_CFLAGS = `sdl-config --cflags`
-SDL_LDFLAGS = `sdl-config --libs`
+CFLAGS = $(OPTFLAGS) -g -fPIC -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
+LDFLAGS = $(OPTFLAGS) -g -fPIC -lm
+
+SDL_CFLAGS = $(OPTFLAGS) `sdl-config --cflags`
+SDL_LDFLAGS = $(OPTFLAGS) `sdl-config --libs`
 CFLAGS_COMPARE = -g $(SDL_CFLAGS)
 LDFLAGS_COMPARE = -g -lm $(SDL_LDFLAGS)
 CFLAGS_PLAY = -g $(SDL_CFLAGS)
@@ -56,5 +58,9 @@ $(LIBSACKIT_A): $(OBJS)
 mixer.o: mixer.c mixer_*.h $(INCLUDES)
 	$(CC) -c -o mixer.o $(CFLAGS) mixer.c
 
+litemixer.o: litemixer.c mixer_*.h $(INCLUDES)
+	$(CC) -c -o litemixer.o $(CFLAGS) litemixer.c
+
 %.o: %.c $(INCLUDES)
 	$(CC) -c -o $@ $(CFLAGS) $<
+
