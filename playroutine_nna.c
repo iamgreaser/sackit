@@ -26,8 +26,6 @@ void sackit_nna_note_cut(sackit_playback_t *sackit, sackit_achannel_t *achn)
 
 void sackit_nna_note_off(sackit_playback_t *sackit, sackit_achannel_t *achn)
 {
-	//printf("note_off  %016llX\n", achn);
-	
 	if(achn == NULL)
 		return;
 	

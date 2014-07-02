@@ -42,7 +42,7 @@ void sackit_module_free(it_module_t *module)
 
 it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 {
-	int i,j;
+	int i, j, k;
 	
 	// open file
 	FILE *fp = fopen(fname, "rb");
@@ -116,7 +116,41 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 	{
 		fseek(fp, fboffs + offset_instruments[i], SEEK_SET);
 		module->instruments[i] = malloc(sizeof(it_instrument_t));
-		fread(module->instruments[i], sizeof(it_instrument_t), 1, fp);
+
+		//fread(module->instruments[i], sizeof(it_instrument_t), 1, fp);
+		// XXX: work around a compiler bug in MinGW GCC 4.7.2
+		fread(module->instruments[i], (void *)(&((it_instrument_t *)0)->evol) - (void *)0, 1, fp);
+
+		for(j = 0; j < 3; j++)
+		{
+			it_envelope_t *ev = NULL;
+
+			switch(j)
+			{
+				case 0: ev = &module->instruments[i]->evol; break;
+				case 1: ev = &module->instruments[i]->epan; break;
+				case 2: ev = &module->instruments[i]->epitch; break;
+			}
+
+			ev->flg = fgetc(fp);
+			ev->num = fgetc(fp);
+			ev->lpb = fgetc(fp);
+			ev->lpe = fgetc(fp);
+			ev->slb = fgetc(fp);
+			ev->sle = fgetc(fp);
+
+			for(k = 0; k < 25; k++)
+			{
+				int vy = fgetc(fp);
+				int vxl = fgetc(fp);
+				int vxh = fgetc(fp);
+
+				ev->points[k].y = vy;
+				ev->points[k].x = vxl | (vxh<<8);
+			}
+
+			fgetc(fp);
+		}
 	}
 	
 	// samples

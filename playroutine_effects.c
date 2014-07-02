@@ -696,22 +696,22 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 			if(csmp != NULL)
 				pchn->sample = csmp;
 		}
-		
+
+		if(/*ins != pchn->lins && */pchn->instrument != NULL && flag_nna_set == -1)
+		{
+			flag_nna_set = pchn->instrument->nna;
+		}
+
 		if(pchn->sample != NULL)
 		{
 			if(vol > 64)
 			{
 				pchn->vol = pchn->sample->vol;
-				if(pchn->achn != NULL)
+				if(pchn->achn != NULL && (flag_nna_set == -1 || flag_nna_set == 0))
 					pchn->achn->vol = pchn->vol;
 			}
 		}
-		
-		if(/*ins != pchn->lins && */pchn->instrument != NULL && flag_nna_set == -1)
-		{
-			flag_nna_set = pchn->instrument->nna;
-		}
-		
+
 		if(((
 			pchn->achn == NULL || (!(pchn->achn->flags & SACKIT_ACHN_PLAYING))
 			)|| pchn->lins != ins)
@@ -723,7 +723,7 @@ void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pch
 		
 		pchn->lins = ins;
 	}
-	
+
 	if(note <= 119)
 	{
 		// actual note

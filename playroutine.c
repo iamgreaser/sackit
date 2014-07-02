@@ -178,7 +178,7 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 		aenv->y = 256*(int32_t)aenv->def;
 		return;
 	}
-	
+
 	// TODO: check the case where points[0].x != 0
 	// TODO: check the case where lpbeg/end are out of range
 	// TODO: clamp x correctly
@@ -219,7 +219,7 @@ void sackit_env_update(sackit_playback_t *sackit, sackit_achannel_t *achn
 		// TODO: get correct rounding
 		aenv->y = iy0*256 + (256*(iy1-iy0)*(aenv->x-ix0))/(ix1-ix0);
 	}
-	
+
 	aenv->x++;
 	//printf("k %i %i\n",lpend,aenv->x);
 	if(aenv->x > ix1 || aenv->idx == lpend)
