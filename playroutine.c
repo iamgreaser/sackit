@@ -21,9 +21,11 @@ void (*(fnlist_itmixer[]))(sackit_playback_t *sackit, int offs, int len) = {
 	sackit_playback_mixstuff_it214fls,
 	sackit_playback_mixstuff_it214fc,
 	sackit_playback_mixstuff_it214fcs,
+	sackit_playback_mixstuff_intfast_a,
+	sackit_playback_mixstuff_intfast_as,
 };
 
-int itmixer_bytes[] = { 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4 };
+int itmixer_bytes[] = { 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 2, 4 };
 
 void sackit_update_effects(sackit_playback_t *sackit)
 {

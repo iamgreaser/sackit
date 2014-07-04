@@ -160,3 +160,18 @@
 #undef MIXER_INTERP_CUBIC
 #undef MIXER_FILTERED
 
+// Fast integer mixer, anticlick
+#define MIXER_NAME sackit_playback_mixstuff_intfast_a
+#define MIXER_VER 212
+#define MIXER_ANTICLICK
+#include "mixer_int_fast.h"
+#undef MIXER_NAME
+
+#define MIXER_NAME sackit_playback_mixstuff_intfast_as
+#define MIXER_STEREO
+#include "mixer_int_fast.h"
+#undef MIXER_STEREO
+#undef MIXER_NAME
+#undef MIXER_ANTICLICK
+#undef MIXER_VER
+

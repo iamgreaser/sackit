@@ -34,6 +34,9 @@ enum {
 	MIXER_IT214FLS,
 	MIXER_IT214FC,
 	MIXER_IT214FCS,
+
+	MIXER_INTFAST_A,
+	MIXER_INTFAST_AS,
 };
 
 typedef struct it_pattern
