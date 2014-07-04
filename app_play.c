@@ -183,8 +183,8 @@ int main(int argc, char *argv[])
 			pbuf[divpitch*y+x] = 0x00000000;
 #endif
 	
-	//sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT214FS);
-	sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_INTFAST_AS);
+	sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT214FS);
+	//sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_INTFAST_AS);
 	//sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT212S);
 	
 	SDL_AudioSpec aspec;
