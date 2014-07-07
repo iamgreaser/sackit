@@ -170,7 +170,7 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 				bvol = (bvol*(int64_t)gvol);
 				bvol = (bvol*(int64_t)achn->fadeout);
 				bvol = (bvol*(int64_t)mvol);
-				vol = (bvol)>>(1+14+6+6+6+6+7+10+7-15);
+				vol = (bvol)>>(1+14+6+6+6+6+7+10+7-14);
 			}
 			//printf("%04X\n", vol);
 			//vol += 0x0080;
