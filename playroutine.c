@@ -545,18 +545,17 @@ void sackit_playback_update(sackit_playback_t *sackit)
 	{
 		if(sackit->buf_tick_rem != 0)
 		{
-			fnlist_itmixer[sackit->mixeridx](sackit, offs, sackit->buf_tick_rem);
+			sackit->f_mix(sackit, offs, sackit->buf_tick_rem);
 		}
 		offs += sackit->buf_tick_rem;
 		
 		sackit_tick(sackit);
-		// TODO: set freq somewhere
-		sackit->buf_tick_rem = (44100*10)/(sackit->tempo*4);
+		sackit->buf_tick_rem = (sackit->freq*10)/(sackit->tempo*4);
 	}
 	
 	if(offs != (int)sackit->buf_len)
 	{
-		fnlist_itmixer[sackit->mixeridx](sackit, offs, sackit->buf_len-offs);
+		sackit->f_mix(sackit, offs, sackit->buf_len-offs);
 		sackit->buf_tick_rem -= sackit->buf_len-offs;
 	}
 	//printf("rem %i row %i\n", sackit->buf_tick_rem, sackit->process_row);

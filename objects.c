@@ -506,7 +506,8 @@ void sackit_playback_reset_pchn(sackit_pchannel_t *pchn)
 	pchn->sample = NULL;
 }
 
-void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count, int mixeridx)
+void sackit_playback_reset2(sackit_playback_t *sackit, int buf_len, int achn_count,
+	void (*f_mix)(sackit_playback_t *sackit, int offs, int len), int mixer_bytes, int freq)
 {
 	int i;
 	
@@ -536,12 +537,14 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 	sackit->tempo = sackit->module->header.it;
 	
 	sackit->achn_count = achn_count;
-	sackit->mixeridx = mixeridx;
+	sackit->f_mix = f_mix;
+	sackit->mixer_bytes = mixer_bytes;
+	sackit->freq = freq;
 	sackit->buf_len = buf_len;
 	sackit->buf_tick_rem = 0;
 	//printf("%i\n", buf_len);
-	sackit->buf = malloc(sizeof(int16_t)*itmixer_bytes[mixeridx]*sackit->buf_len);
-	sackit->mixbuf = malloc(sizeof(int32_t)*itmixer_bytes[mixeridx]*sackit->buf_len);
+	sackit->buf = malloc(sizeof(int16_t)*mixer_bytes*sackit->buf_len);
+	sackit->mixbuf = malloc(sizeof(int32_t)*mixer_bytes*sackit->buf_len);
 	
 	for(i = 0; i < SACKIT_MAX_ACHANNEL; i++)
 		sackit_playback_reset_achn(&(sackit->achn[i]));
@@ -557,14 +560,29 @@ void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_coun
 	}
 }
 
-sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count, int mixeridx)
+void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count, int mixeridx)
+{
+	// deprecated function
+	sackit_playback_reset2(sackit, buf_len, achn_count,
+		fnlist_itmixer[mixeridx], itmixer_bytes[mixeridx], 44100);
+
+}
+
+sackit_playback_t *sackit_playback_new2(it_module_t *module, int buf_len, int achn_count,
+	void (*f_mix)(sackit_playback_t *sackit, int offs, int len), int mixer_bytes, int freq)
 {
 	// allocate
 	sackit_playback_t *sackit = malloc(sizeof(sackit_playback_t));
 	sackit->module = module;
-	sackit_playback_reset(sackit, buf_len, achn_count, mixeridx);
+	sackit_playback_reset2(sackit, buf_len, achn_count, f_mix, mixer_bytes, freq);
 	
 	return sackit;
+}
+sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count, int mixeridx)
+{
+	// deprecated function
+	return sackit_playback_new2(module, buf_len, achn_count,
+		fnlist_itmixer[mixeridx], itmixer_bytes[mixeridx], 44100);
 }
 
 it_module_t *sackit_module_load(const char *fname)

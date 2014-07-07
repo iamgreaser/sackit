@@ -293,7 +293,8 @@ struct sackit_pchannel
 	uint8_t lmask,ldata[5];
 };
 
-typedef struct sackit_playback
+typedef struct sackit_playback sackit_playback_t;
+struct sackit_playback
 {
 	it_module_t *module;
 	
@@ -317,7 +318,9 @@ typedef struct sackit_playback
 	
 	uint32_t buf_len;
 	uint32_t buf_tick_rem;
-	int mixeridx;
+	void (*f_mix)(sackit_playback_t *sackit, int offs, int len);
+	int mixer_bytes;
+	int freq;
 	int16_t *buf;
 	int32_t *mixbuf;
 	
@@ -328,7 +331,9 @@ typedef struct sackit_playback
 	uint16_t achn_count;
 	sackit_pchannel_t pchn[64];
 	sackit_achannel_t achn[SACKIT_MAX_ACHANNEL];
-} sackit_playback_t;
+};
+
+extern void (*(fnlist_itmixer[]))(sackit_playback_t *sackit, int offs, int len);
 
 // objects.c
 it_module_t *sackit_module_new(void);
@@ -336,9 +341,14 @@ void sackit_module_free(it_module_t *module);
 it_module_t *sackit_module_load(const char *fname);
 it_module_t *sackit_module_load_offs(const char *fname, int fboffs);
 void sackit_playback_free(sackit_playback_t *sackit);
+void sackit_playback_reset2(sackit_playback_t *sackit, int buf_len, int achn_count,
+	void (*f_mix)(sackit_playback_t *sackit, int offs, int len), int mixer_bytes, int freq);
 void sackit_playback_reset(sackit_playback_t *sackit, int buf_len, int achn_count, int mixeridx);
+sackit_playback_t *sackit_playback_new2(it_module_t *module, int buf_len, int achn_count,
+	void (*f_mix)(sackit_playback_t *sackit, int offs, int len), int mixer_bytes, int freq);
 sackit_playback_t *sackit_playback_new(it_module_t *module, int buf_len, int achn_count, int mixeridx);
 
 // playroutine.c
+extern int itmixer_bytes[];
 void sackit_playback_update(sackit_playback_t *sackit);
 

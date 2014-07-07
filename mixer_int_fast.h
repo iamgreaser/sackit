@@ -1,6 +1,6 @@
 void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 {
-	uint32_t tfreq = 44100; // TODO define this elsewhere
+	uint32_t tfreq = sackit->freq;
 
 	int i,j;
 	int offsend = offs+len;

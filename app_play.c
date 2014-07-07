@@ -12,6 +12,9 @@
 
 #include "sackit.h"
 
+#define BUFSIZE 4096
+#define FREQ 48000
+
 SDL_Surface *screen = NULL;
 
 uint32_t palette[4] = {
@@ -42,9 +45,9 @@ void test_sdl_callback(void *userdata, Uint8 *stream, int len)
 	
 	while(offs < len)
 	{
-		if(sound_queue_pos < 4096)
+		if(sound_queue_pos < BUFSIZE)
 		{
-			int xlen = 4096-sound_queue_pos;
+			int xlen = BUFSIZE-sound_queue_pos;
 			if(xlen > len-offs)
 				xlen = len;
 			
@@ -52,7 +55,7 @@ void test_sdl_callback(void *userdata, Uint8 *stream, int len)
 			sound_queue_pos += xlen;
 			offs += xlen;
 		} else {
-			memcpy(sound_queue, nvbuf, 4096*4);
+			memcpy(sound_queue, nvbuf, BUFSIZE*4);
 			sound_queue_pos = 0;
 			sound_ready = 1;
 		}
@@ -102,10 +105,10 @@ int mainloop(sackit_playback_t *sackit)
 			sackit_playback_update(sackit);
 
 			int16_t *nvbuf = (int16_t *)sound_buf;
-			memcpy(nvbuf, sackit->buf, 4096*4);
+			memcpy(nvbuf, sackit->buf, BUFSIZE*4);
 			sound_ready = 0;
 
-			mozsux_expticks += 1000.0f*4096.0f/44100.0f;
+			mozsux_expticks += 1000.0f*BUFSIZE/(float)(FREQ);
 			if(mozsux_expticks + 1500.0f < mozsux_curticks)
 				mozsux_expticks = mozsux_curticks - 1500.0f;
 			SDL_PauseAudio(0);
@@ -116,7 +119,7 @@ int mainloop(sackit_playback_t *sackit)
 		sackit_playback_update(sackit);
 
 		int16_t *nvbuf = (int16_t *)sound_buf;
-		memcpy(nvbuf, sackit->buf, 4096*4);
+		memcpy(nvbuf, sackit->buf, BUFSIZE*4);
 		sound_ready = 0;
 #endif
 		
@@ -183,22 +186,22 @@ int main(int argc, char *argv[])
 			pbuf[divpitch*y+x] = 0x00000000;
 #endif
 	
-	sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT214FS);
-	//sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_INTFAST_AS);
-	//sackit_playback_t *sackit = sackit_playback_new(module, 4096, 256, MIXER_IT212S);
+	sackit_playback_t *sackit = sackit_playback_new2(module, BUFSIZE, 256, fnlist_itmixer[MIXER_IT214FS], 4, FREQ);
+	//sackit_playback_t *sackit = sackit_playback_new2(module, BUFSIZE, 256, fnlist_itmixer[MIXER_INTFAST_AS], 4, FREQ);
+	//sackit_playback_t *sackit = sackit_playback_new2(module, BUFSIZE, 256, fnlist_itmixer[MIXER_IT212S], 4, FREQ);
 	
 	SDL_AudioSpec aspec;
-	aspec.freq = 44100;
+	aspec.freq = FREQ;
 	aspec.format = AUDIO_S16SYS;
 	aspec.channels = 2;
 #ifdef __EMSCRIPTEN__
 	aspec.samples = 512;
 #else
-	aspec.samples = 4096;
+	aspec.samples = BUFSIZE;
 #endif
 	aspec.callback = test_sdl_callback;
-	sound_buf = calloc(1,4096*4);
-	sound_queue = calloc(1,4096*4);
+	sound_buf = calloc(1,BUFSIZE*4);
+	sound_queue = calloc(1,BUFSIZE*4);
 	SDL_OpenAudio(&aspec, NULL);
 	SDL_PauseAudio(0);
 	

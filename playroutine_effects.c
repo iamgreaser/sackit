@@ -26,7 +26,7 @@ void sackit_filter_calc(sackit_playback_t *sackit, sackit_achannel_t *achn)
 		return;
 	}
 
-	float r = pow(2.0, cut * -0.00016276040696538985) * 0.0012166619999334216 * 44100;
+	float r = pow(2.0, cut * -0.00016276040696538985) * 0.0012166619999334216 * sackit->freq;
 	float d2 = quality_factor_table[res];
 	//printf("%.9f %.9f\n", r, d2);
 	

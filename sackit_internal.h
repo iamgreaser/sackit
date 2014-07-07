@@ -59,7 +59,6 @@ void sackit_playback_reset_achn(sackit_achannel_t *achn);
 void sackit_playback_reset_pchn(sackit_pchannel_t *pchn);
 
 // playroutine.c
-extern int itmixer_bytes[];
 void sackit_filter_calc(sackit_playback_t *sackit, sackit_achannel_t *achn);
 void sackit_note_retrig(sackit_playback_t *sackit, sackit_pchannel_t *pchn, int offs);
 void sackit_update_effects_chn(sackit_playback_t *sackit, sackit_pchannel_t *pchn,
