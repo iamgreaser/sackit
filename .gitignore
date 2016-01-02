@@ -6,3 +6,6 @@ libsackit.so
 # backups
 *~
 
+# build directory
+build/
+
