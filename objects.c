@@ -117,9 +117,13 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 		fseek(fp, fboffs + offset_instruments[i], SEEK_SET);
 		module->instruments[i] = malloc(sizeof(it_instrument_t));
 
+#ifdef _MSC_VER
+		fread(module->instruments[i], sizeof(it_instrument_t), 1, fp);
+#else
 		//fread(module->instruments[i], sizeof(it_instrument_t), 1, fp);
 		// XXX: work around a compiler bug in MinGW GCC 4.7.2
 		fread(module->instruments[i], (void *)(&((it_instrument_t *)0)->evol) - (void *)0, 1, fp);
+#endif
 
 		for(j = 0; j < 3; j++)
 		{

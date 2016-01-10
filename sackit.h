@@ -39,13 +39,15 @@ enum {
 	MIXER_INTFAST_AS,
 };
 
+#pragma pack(push, 1)
 typedef struct it_pattern
 {
 	uint16_t length;
 	uint16_t rows;
 	uint32_t reserved;
 	uint8_t data[65536];
-} __attribute__((__packed__)) it_pattern_t;
+} it_pattern_t;
+#pragma pack(pop)
 
 #define IT_SMP_EXISTS   0x01
 #define IT_SMP_16BIT    0x02
@@ -56,6 +58,7 @@ typedef struct it_pattern
 #define IT_SMP_LOOPBIDI 0x40
 #define IT_SMP_SUSBIDI  0x80
 
+#pragma pack(push, 1)
 typedef struct it_sample
 {
 	uint8_t magic[4]; // IMPS
@@ -70,7 +73,8 @@ typedef struct it_sample
 	uint32_t samplepointer;
 	uint8_t vis,vid,vir,vit;
 	int16_t *data;
-} __attribute__((__packed__)) it_sample_t;
+} it_sample_t;
+#pragma pack(pop)
 
 #define IT_ENV_ON       0x01
 #define IT_ENV_LOOP     0x02
@@ -81,17 +85,21 @@ typedef struct it_sample
 // (it's not in ITTECH - dammit Jeff...)
 // - yes, it IS that flag. Apparently it was added in IT 2.14p5 or MAYBE p4 (it's not in p3!).
 
+#pragma pack(push, 1)
 typedef struct it_envelope
 {
 	uint8_t flg,num;
 	uint8_t lpb,lpe;
 	uint8_t slb,sle;
+#pragma pack(push, 1)
 	struct {
 		int8_t y;
 		uint16_t x;
-	} __attribute__((__packed__)) points[25];
+	} points[25];
+#pragma pack(pop)
 	uint8_t resv1;
-} __attribute__((__packed__)) it_envelope_t;
+} it_envelope_t;
+#pragma pack(pop)
 
 #define IT_MOD_STEREO  0x01
 #define IT_MOD_VOL0MIX 0x02 /* Most. Useless. Flag. Ever. */
@@ -106,6 +114,7 @@ typedef struct it_envelope
 //define IT_SPECIAL_        0x04 // unknown
 #define IT_SPECIAL_HASMIDI  0x08
 
+#pragma pack(push, 1)
 typedef struct it_instrument
 {
 	uint8_t magic[4]; // IMPI
@@ -125,10 +134,14 @@ typedef struct it_instrument
 	it_envelope_t evol;
 	it_envelope_t epan;
 	it_envelope_t epitch;
-} __attribute__((__packed__)) it_instrument_t;
+} it_instrument_t;
+#pragma pack(pop)
+
 typedef struct it_module_header it_module_header_t;
+
 typedef struct it_module
 {
+#pragma pack(push, 1)
 	struct it_module_header {
 		uint8_t magic[4]; // IMPM
 		uint8_t song_name[26];
@@ -142,7 +155,9 @@ typedef struct it_module
 		uint32_t timestamp; // reserved my ass --GM
 		uint8_t chnl_pan[64];
 		uint8_t chnl_vol[64];
-	} __attribute__((__packed__)) header;
+	} header;
+#pragma pack(pop)
+
 	uint8_t orders[MAX_ORDERS];
 	it_instrument_t *instruments[MAX_INSTRUMENTS];
 	it_sample_t *samples[MAX_SAMPLES];

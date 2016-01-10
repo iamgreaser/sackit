@@ -309,67 +309,95 @@ void MIXER_NAME(sackit_playback_t *sackit, int offs, int len)
 
 			if((zflg & IT_SMP_LOOP) && (zflg & IT_SMP_LOOPBIDI))
 			{
-				INTFAST_MIX_HANDLER(
 #ifdef MIXER_STEREO
-					INTFAST_MIX2((rampmul*vl)>>8, (rampmul*vr)>>8),
+#	ifdef MIXER_ANTICLICK
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX2((rampmul*vl) >> 8, (rampmul*vr) >> 8),
 					INTFAST_MIX2(vlpre, vrpre),
-#ifdef MIXER_ANTICLICK
 					INTFAST_AC2,
-#else
-					,
-#endif
-#else
-					INTFAST_MIX1(rampmul),
-					INTFAST_MIX1(vol),
-#ifdef MIXER_ANTICLICK
-					INTFAST_AC1,
-#else
-					,
-#endif
-#endif
 					INTFAST_TERM_BIDI);
-
+#	else
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX2((rampmul*vl) >> 8, (rampmul*vr) >> 8),
+					INTFAST_MIX2(vlpre, vrpre),
+					,
+					INTFAST_TERM_BIDI);
+#	endif
+#else
+#	ifdef MIXER_ANTICLICK
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX1(rampmul),
+					INTFAST_MIX1(vol),
+					INTFAST_AC1,
+					INTFAST_TERM_BIDI);
+#	else
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX1(rampmul),
+					INTFAST_MIX1(vol),
+					,
+					INTFAST_TERM_BIDI);
+#	endif
+#endif
 			} else if((zflg & IT_SMP_LOOP) && !(zflg & IT_SMP_LOOPBIDI)) {
-				INTFAST_MIX_HANDLER(
 #ifdef MIXER_STEREO
-					INTFAST_MIX2((rampmul*vl)>>8, (rampmul*vr)>>8),
+#	ifdef MIXER_ANTICLICK
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX2((rampmul*vl) >> 8, (rampmul*vr) >> 8),
 					INTFAST_MIX2(vlpre, vrpre),
-#ifdef MIXER_ANTICLICK
 					INTFAST_AC2,
-#else
-					,
-#endif
-#else
-					INTFAST_MIX1(rampmul),
-					INTFAST_MIX1(vol),
-#ifdef MIXER_ANTICLICK
-					INTFAST_AC1,
-#else
-					,
-#endif
-#endif
 					INTFAST_TERM_LOOP);
-
-			} else {
+#	else
 				INTFAST_MIX_HANDLER(
-#ifdef MIXER_STEREO
-					INTFAST_MIX2((rampmul*vl)>>8, (rampmul*vr)>>8),
+					INTFAST_MIX2((rampmul*vl) >> 8, (rampmul*vr) >> 8),
 					INTFAST_MIX2(vlpre, vrpre),
-#ifdef MIXER_ANTICLICK
-					INTFAST_AC2,
-#else
 					,
-#endif
+					INTFAST_TERM_LOOP);
+#	endif
 #else
+#	ifdef MIXER_ANTICLICK
+				INTFAST_MIX_HANDLER(
 					INTFAST_MIX1(rampmul),
 					INTFAST_MIX1(vol),
-#ifdef MIXER_ANTICLICK
 					INTFAST_AC1,
-#else
+					INTFAST_TERM_LOOP);
+#	else
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX1(rampmul),
+					INTFAST_MIX1(vol),
 					,
+					INTFAST_TERM_LOOP);
+#	endif
 #endif
-#endif
+			} else {
+#ifdef MIXER_STEREO
+#	ifdef MIXER_ANTICLICK
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX2((rampmul*vl) >> 8, (rampmul*vr) >> 8),
+					INTFAST_MIX2(vlpre, vrpre),
+					INTFAST_AC2,
 					INTFAST_TERM_NOLOOP);
+#	else
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX2((rampmul*vl) >> 8, (rampmul*vr) >> 8),
+					INTFAST_MIX2(vlpre, vrpre),
+					,
+					INTFAST_TERM_NOLOOP);
+#	endif
+#else
+#	ifdef MIXER_ANTICLICK
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX1(rampmul),
+					INTFAST_MIX1(vol),
+					INTFAST_AC1,
+					INTFAST_TERM_NOLOOP);
+#	else
+				INTFAST_MIX_HANDLER(
+					INTFAST_MIX1(rampmul),
+					INTFAST_MIX1(vol),
+					,
+					INTFAST_TERM_NOLOOP);
+#	endif
+#endif
 			}
 
 			achn->offs = zoffs;
