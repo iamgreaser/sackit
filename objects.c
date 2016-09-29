@@ -40,27 +40,125 @@ void sackit_module_free(it_module_t *module)
 	free(module);
 }
 
+char sackit_file_getc(sackit_reader_t *reader)
+{
+	return fgetc((FILE *)reader->in);
+}
+
+size_t sackit_file_read(sackit_reader_t *reader, void *out, size_t size)
+{
+	return fread(out, size, 1, (FILE *)reader->in);
+}
+
+void sackit_file_seek(sackit_reader_t *reader, long offset, int mode)
+{
+	fseek((FILE *)reader->in, offset, mode);
+}
+
+long sackit_file_tell(sackit_reader_t *reader)
+{
+	return ftell((FILE *)reader->in);
+}
+
+char sackit_mem_getc(sackit_reader_t *reader)
+{
+	sackit_reader_data_mem_t *data = (sackit_reader_data_mem_t *)reader->in;
+	if (data->pos >= data->len) return EOF;
+	else return data->ptr[data->pos++];
+}
+
+size_t sackit_mem_read(sackit_reader_t *reader, void *out, size_t psize)
+{
+	sackit_reader_data_mem_t *data = (sackit_reader_data_mem_t *)reader->in;
+	size_t size = data->len - data->pos;
+	if (psize < size) size = psize;
+	memcpy(out, &(data->ptr[data->pos]), size);
+	data->pos += size;
+	return size > 0 ? 1 : 0;
+}
+
+void sackit_mem_seek(sackit_reader_t *reader, long offset, int mode)
+{
+	sackit_reader_data_mem_t *data = (sackit_reader_data_mem_t *)reader->in;
+	switch (mode)
+	{
+		case SEEK_CUR:
+			data->pos += offset;
+			break;
+		case SEEK_SET:
+			data->pos = offset;
+			break;
+		case SEEK_END:
+			data->pos = data->len - offset;
+			break;
+	}
+
+	if (data->pos < 0) data->pos = 0;
+}
+
+long sackit_mem_tell(sackit_reader_t *reader)
+{
+	sackit_reader_data_mem_t *data = (sackit_reader_data_mem_t *)reader->in;
+	return data->pos;
+}
+
 it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 {
-	int i, j, k;
-	
-	// open file
+	it_module_t *module;
+	sackit_reader_t reader;
+
 	FILE *fp = fopen(fname, "rb");
 	if(fp == NULL)
 	{
 		perror("sackit_module_load");
 		return NULL;
 	}
+
+	reader.in = (void *)fp;
+	reader.getch = &sackit_file_getc;
+	reader.read = &sackit_file_read;
+	reader.seek = &sackit_file_seek;
+	reader.tell = &sackit_file_tell;
+
+	module = sackit_module_load_offs_internal(&reader, fboffs);
+
+	fclose(fp);
+	return module;
+}
+
+it_module_t *sackit_module_load_memory(const void *data, const long length)
+{
+	it_module_t *module;
+	sackit_reader_t reader;
+	sackit_reader_data_mem_t memdata;
+
+	memdata.ptr = data;
+	memdata.pos = 0;
+	memdata.len = length;
+
+	reader.in = &memdata;
+	reader.getch = &sackit_mem_getc;
+	reader.read = &sackit_mem_read;
+	reader.seek = &sackit_mem_seek;
+	reader.tell = &sackit_mem_tell;
+
+	module = sackit_module_load_offs_internal(&reader, 0);
+
+	return module;
+}
+
+it_module_t *sackit_module_load_offs_internal(sackit_reader_t *reader, int fboffs)
+{
+	int i, j, k;
 	
 	// create module
 	it_module_t *module = sackit_module_new();
 	
 	// load header
-	fseek(fp, fboffs, SEEK_SET);
-	if(fread(&(module->header), sizeof(it_module_header_t), 1, fp) != 1)
+	reader->seek(reader, fboffs, SEEK_SET);
+	if(reader->read(reader, &(module->header), sizeof(it_module_header_t)) != 1)
 	{
 		fprintf(stderr, "sackit_module_load: could not read header\n");
-		fclose(fp);
 		sackit_module_free(module);
 		return NULL;
 	}
@@ -69,7 +167,6 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 	if(memcmp(module->header.magic, "IMPM", 4))
 	{
 		fprintf(stderr, "sackit_module_load: invalid magic\n");
-		fclose(fp);
 		sackit_module_free(module);
 		return NULL;
 	}
@@ -81,7 +178,6 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 		|| module->header.patnum > MAX_PATTERNS)
 	{
 		fprintf(stderr, "sackit_module_load: header limits exceeded\n");
-		fclose(fp);
 		sackit_module_free(module);
 		return NULL;
 	}
@@ -89,10 +185,9 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 	module->header.song_name[25] = 0x00;
 	//printf("module name: \"%s\"\n", module->header.song_name);
 	
-	if(fread(module->orders, module->header.ordnum, 1, fp) != 1)
+	if(reader->read(reader, module->orders, module->header.ordnum) != 1)
 	{
 		fprintf(stderr, "sackit_module_load: could not read orderlist\n");
-		fclose(fp);
 		sackit_module_free(module);
 		return NULL;
 	}
@@ -101,12 +196,11 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 	static uint32_t offset_samples[MAX_SAMPLES];
 	static uint32_t offset_patterns[MAX_PATTERNS];
 	
-	if((module->header.insnum != 0 && fread(offset_instruments, module->header.insnum*4, 1, fp) != 1)
-		|| (module->header.smpnum != 0 && fread(offset_samples, module->header.smpnum*4, 1, fp) != 1)
-		|| (module->header.patnum != 0 && fread(offset_patterns, module->header.patnum*4, 1, fp) != 1))
+	if((module->header.insnum != 0 && reader->read(reader, offset_instruments, module->header.insnum*4) != 1)
+		|| (module->header.smpnum != 0 && reader->read(reader, offset_samples, module->header.smpnum*4) != 1)
+		|| (module->header.patnum != 0 && reader->read(reader, offset_patterns, module->header.patnum*4) != 1))
 	{
 		fprintf(stderr, "sackit_module_load: could not read pointers from header\n");
-		fclose(fp);
 		sackit_module_free(module);
 		return NULL;
 	}
@@ -114,15 +208,15 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 	// instruments
 	for(i = 0; i < module->header.insnum; i++)
 	{
-		fseek(fp, fboffs + offset_instruments[i], SEEK_SET);
+		reader->seek(reader, fboffs + offset_instruments[i], SEEK_SET);
 		module->instruments[i] = malloc(sizeof(it_instrument_t));
 
 #ifdef _MSC_VER
-		fread(module->instruments[i], sizeof(it_instrument_t), 1, fp);
+		reader->read(reader, module->instruments[i], sizeof(it_instrument_t));
 #else
-		//fread(module->instruments[i], sizeof(it_instrument_t), 1, fp);
+		//reader->read(reader, module->instruments[i], sizeof(it_instrument_t));
 		// XXX: work around a compiler bug in MinGW GCC 4.7.2
-		fread(module->instruments[i], (void *)(&((it_instrument_t *)0)->evol) - (void *)0, 1, fp);
+		reader->read(reader, module->instruments[i], (void *)(&((it_instrument_t *)0)->evol) - (void *)0);
 #endif
 
 		for(j = 0; j < 3; j++)
@@ -136,40 +230,40 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 				case 2: ev = &module->instruments[i]->epitch; break;
 			}
 
-			ev->flg = fgetc(fp);
-			ev->num = fgetc(fp);
-			ev->lpb = fgetc(fp);
-			ev->lpe = fgetc(fp);
-			ev->slb = fgetc(fp);
-			ev->sle = fgetc(fp);
+			ev->flg = reader->getch(reader);
+			ev->num = reader->getch(reader);
+			ev->lpb = reader->getch(reader);
+			ev->lpe = reader->getch(reader);
+			ev->slb = reader->getch(reader);
+			ev->sle = reader->getch(reader);
 
 			for(k = 0; k < 25; k++)
 			{
-				int vy = fgetc(fp);
-				int vxl = fgetc(fp);
-				int vxh = fgetc(fp);
+				int vy = reader->getch(reader);
+				int vxl = reader->getch(reader);
+				int vxh = reader->getch(reader);
 
 				ev->points[k].y = vy;
 				ev->points[k].x = vxl | (vxh<<8);
 			}
 
-			fgetc(fp);
+			reader->getch(reader);
 		}
 	}
 	
 	// samples
 	for(i = 0; i < module->header.smpnum; i++)
 	{
-		fseek(fp, fboffs + offset_samples[i], SEEK_SET);
+		reader->seek(reader, fboffs + offset_samples[i], SEEK_SET);
 		it_sample_t *smp = malloc(sizeof(it_sample_t));
 		module->samples[i] = smp;
-		fread(smp, sizeof(it_sample_t)-sizeof(int16_t *), 1, fp);
+		reader->read(reader, smp, sizeof(it_sample_t)-sizeof(int16_t *));
 		
 		smp->data = NULL;
 		if(smp->samplepointer != 0 && smp->length != 0 && (smp->flg & IT_SMP_EXISTS))
 		{
 			// NO WE ARE NOT SUPPORTING STEREO SAMPLES PISS OFF MODPLUG
-			fseek(fp, fboffs + smp->samplepointer, SEEK_SET);
+			reader->seek(reader, fboffs + smp->samplepointer, SEEK_SET);
 			smp->data = malloc(smp->length*sizeof(int16_t));
 			
 			// check compression flag
@@ -200,11 +294,11 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 						smp->data[j+offs] = 0;
 					
 					// get length
-					fread(buf, 2, 1, fp);
+					reader->read(reader, buf, 2);
 					int blklen = buf[0]|(buf[1]<<8);
 					
 					// get block
-					fread(buf, blklen, 1, fp);
+					reader->read(reader, buf, blklen);
 					
 					//printf("block = %i bytes\n", blklen);
 					
@@ -275,8 +369,8 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 									// bail out
 									fprintf(stderr,
 										"IT214 block error [%08X/%08X/%i]: invalid width %i\n"
-										, ftell(fp) - blklen - 2
-										, ftell(fp) - blklen + (boffs>>3)
+										, reader->tell(reader) - blklen - 2
+										, reader->tell(reader) - blklen + (boffs>>3)
 										, j
 										, dw);
 									break;
@@ -338,10 +432,10 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 				// load
 				if(smp->flg & IT_SMP_16BIT)
 				{
-					fread(smp->data, smp->length*2, 1, fp);
+					reader->read(reader, smp->data, smp->length*2);
 				} else {
 					for(j = 0; j < (int)smp->length; j++)
-						smp->data[j] = (fgetc(fp))<<8;
+						smp->data[j] = (reader->getch(reader))<<8;
 				}
 				
 				// convert
@@ -360,14 +454,12 @@ it_module_t *sackit_module_load_offs(const char *fname, int fboffs)
 	// patterns
 	for(i = 0; i < module->header.patnum; i++)
 	{
-		fseek(fp, fboffs + offset_patterns[i], SEEK_SET);
+		reader->seek(reader, fboffs + offset_patterns[i], SEEK_SET);
 		module->patterns[i] = malloc(sizeof(it_pattern_t));
-		fread(module->patterns[i], sizeof(it_pattern_t)-65536, 1, fp);
-		fread(8+(uint8_t *)module->patterns[i], module->patterns[i]->length, 1, fp);
+		reader->read(reader, module->patterns[i], sizeof(it_pattern_t)-65536);
+		reader->read(reader, 8+(uint8_t *)module->patterns[i], module->patterns[i]->length);
 	}
-	
-	fclose(fp);
-	
+
 	return module;
 }
 
