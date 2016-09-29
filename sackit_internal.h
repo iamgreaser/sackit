@@ -8,6 +8,23 @@
 
 #include "sackit.h"
 
+typedef struct sackit_reader sackit_reader_t;
+struct sackit_reader
+{
+	void *in;
+	char (*getch)(sackit_reader_t *reader);
+	size_t (*read)(sackit_reader_t *reader, void *out, size_t size);
+	void (*seek)(sackit_reader_t *reader, long offset, int mode);
+	long (*tell)(sackit_reader_t *reader);
+};
+
+typedef struct sackit_reader_data_mem sackit_reader_data_mem_t;
+struct sackit_reader_data_mem
+{
+	const char* ptr;
+	long pos, len;
+};
+
 // effects.c
 uint32_t sackit_pitchslide_linear(uint32_t freq, int16_t amt);
 uint32_t sackit_pitchslide_linear_fine(uint32_t freq, int16_t amt);
@@ -55,6 +72,7 @@ void sackit_playback_mixstuff_intfast_a(sackit_playback_t *sackit, int offs, int
 void sackit_playback_mixstuff_intfast_as(sackit_playback_t *sackit, int offs, int len);
 
 // objects.c
+it_module_t *sackit_module_load_offs_internal(sackit_reader_t *reader, int fboffs);
 void sackit_playback_reset_achn(sackit_achannel_t *achn);
 void sackit_playback_reset_pchn(sackit_pchannel_t *pchn);
 
